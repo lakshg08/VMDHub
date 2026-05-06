@@ -44,15 +44,17 @@ class InvoiceService {
 
     const invoiceId = await prisma.$transaction(async (tx) => {
       if (!invoice.invoiceNumber) {
+        const prefix = this._getFYPrefix(invoice.invoiceDate);
         const last = await tx.invoice.findFirst({
+          where: { invoice_number: { startsWith: `${prefix}/` } },
           orderBy: { id: 'desc' },
           select: { invoice_number: true },
         });
         if (!last) {
-          invoice.invoiceNumber = 'INV-0001';
+          invoice.invoiceNumber = `${prefix}/001`;
         } else {
-          const num = parseInt(last.invoice_number.replace('INV-', ''), 10) + 1;
-          invoice.invoiceNumber = `INV-${String(num).padStart(4, '0')}`;
+          const seq = parseInt(last.invoice_number.split('/')[1], 10) + 1;
+          invoice.invoiceNumber = `${prefix}/${String(seq).padStart(3, '0')}`;
         }
       }
 
@@ -112,14 +114,24 @@ class InvoiceService {
     }
   }
 
-  async getNextInvoiceNumber() {
+  async getNextInvoiceNumber(date = new Date().toISOString().split('T')[0]) {
+    const prefix = this._getFYPrefix(date);
     const last = await prisma.invoice.findFirst({
+      where: { invoice_number: { startsWith: `${prefix}/` } },
       orderBy: { id: 'desc' },
       select: { invoice_number: true },
     });
-    if (!last) return 'INV-0001';
-    const num = parseInt(last.invoice_number.replace('INV-', ''), 10) + 1;
-    return `INV-${String(num).padStart(4, '0')}`;
+    if (!last) return `${prefix}/001`;
+    const seq = parseInt(last.invoice_number.split('/')[1], 10) + 1;
+    return `${prefix}/${String(seq).padStart(3, '0')}`;
+  }
+
+  _getFYPrefix(dateStr) {
+    const d = new Date(dateStr);
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    const startYear = month >= 4 ? year : year - 1;
+    return `${startYear}-${String(startYear + 1).slice(-2)}`;
   }
 }
 

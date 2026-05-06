@@ -35,7 +35,10 @@ export default function InvoiceForm() {
   useEffect(() => {
     fetch(`${API}/products`).then(r => r.json()).then(setProducts);
     if (id) loadInvoice(id);
-    else fetch(`${API}/invoices/next-number`).then(r => r.json()).then(d => setForm(f => ({ ...f, invoice_number: d.nextNumber })));
+    else {
+      const today = new Date().toISOString().split('T')[0];
+      fetch(`${API}/invoices/next-number?date=${today}`).then(r => r.json()).then(d => setForm(f => ({ ...f, invoice_number: d.nextNumber })));
+    }
   }, [id]);
 
   async function loadInvoice(invoiceId) {
