@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
+import CustomerList from './components/CustomerList';
 import VendorList from './components/VendorList';
 import ProductList from './components/ProductList';
 import InvoiceForm from './components/InvoiceForm';
@@ -10,6 +11,7 @@ import Settings from './components/Settings';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: '📊' },
+  { path: '/customers', label: 'Customers', icon: '👥' },
   { path: '/vendors', label: 'Vendors', icon: '🏢' },
   { path: '/products', label: 'Products', icon: '📦' },
   { path: '/invoices', label: 'Invoices', icon: '🧾' },
@@ -79,6 +81,7 @@ export default function App() {
         <main style={{ flex: 1, padding: 24, overflow: 'auto', background: '#f4f6f9' }}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/customers" element={<CustomerList />} />
             <Route path="/vendors" element={<VendorList />} />
             <Route path="/products" element={<ProductList />} />
             <Route path="/invoices" element={<InvoiceForm />} />

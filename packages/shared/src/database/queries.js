@@ -20,6 +20,36 @@ function initializeSchema(database) {
   database.exec(schema);
 }
 
+// Customer queries
+const customerQueries = {
+  getAll: (db) => db.prepare('SELECT * FROM customers ORDER BY name').all(),
+  getById: (db, id) => db.prepare('SELECT * FROM customers WHERE id = ?').get(id),
+  getByType: (db, type) => {
+    if (type === 'corporate') {
+      return db.prepare("SELECT * FROM customers WHERE gst_number IS NOT NULL AND gst_number != '' ORDER BY name").all();
+    }
+    return db.prepare("SELECT * FROM customers WHERE gst_number IS NULL OR gst_number = '' ORDER BY name").all();
+  },
+  create: (db, data) => {
+    const stmt = db.prepare(`
+      INSERT INTO customers (name, email, phone, address, gst_number)
+      VALUES (@name, @email, @phone, @address, @gst_number)
+    `);
+    return stmt.run(data);
+  },
+  update: (db, id, data) => {
+    const stmt = db.prepare(`
+      UPDATE customers SET name=@name, email=@email, phone=@phone,
+      address=@address, gst_number=@gst_number WHERE id=@id
+    `);
+    return stmt.run({ ...data, id });
+  },
+  delete: (db, id) => db.prepare('DELETE FROM customers WHERE id = ?').run(id),
+  search: (db, query) => db.prepare(
+    "SELECT * FROM customers WHERE name LIKE ? OR email LIKE ? OR gst_number LIKE ?"
+  ).all(`%${query}%`, `%${query}%`, `%${query}%`),
+};
+
 // Vendor queries
 const vendorQueries = {
   getAll: (db) => db.prepare('SELECT * FROM vendors ORDER BY name').all(),
@@ -202,6 +232,7 @@ const settingsQueries = {
 
 module.exports = {
   getDatabase,
+  customerQueries,
   vendorQueries,
   productQueries,
   invoiceQueries,

@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const path = require('path');
 const { getDatabase } = require('@vmd/shared');
 
+const customerRoutes = require('./routes/customers');
 const vendorRoutes = require('./routes/vendors');
 const productRoutes = require('./routes/products');
 const invoiceRoutes = require('./routes/invoices');
@@ -33,6 +34,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 
 // Routes
+app.use('/api/customers', customerRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/invoices', invoiceRoutes);

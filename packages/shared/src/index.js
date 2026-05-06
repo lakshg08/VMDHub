@@ -1,4 +1,5 @@
-const { getDatabase, vendorQueries, productQueries, invoiceQueries, invoiceItemQueries, gstQueries, settingsQueries } = require('./database/queries');
+const { getDatabase, customerQueries, vendorQueries, productQueries, invoiceQueries, invoiceItemQueries, gstQueries, settingsQueries } = require('./database/queries');
+const Customer = require('./models/Customer');
 const Vendor = require('./models/Vendor');
 const Product = require('./models/Product');
 const { Invoice, InvoiceItem } = require('./models/Invoice');
@@ -16,6 +17,7 @@ const constants = require('./constants');
 module.exports = {
   // Database
   getDatabase,
+  customerQueries,
   vendorQueries,
   productQueries,
   invoiceQueries,
@@ -23,6 +25,7 @@ module.exports = {
   gstQueries,
   settingsQueries,
   // Models
+  Customer,
   Vendor,
   Product,
   Invoice,

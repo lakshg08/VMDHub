@@ -1,5 +1,24 @@
 -- VMDHub Database Schema
 
+-- Customers Table
+CREATE TABLE IF NOT EXISTS customers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  address TEXT,
+  gst_number TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_customers_gst ON customers(gst_number);
+
+CREATE TRIGGER IF NOT EXISTS customers_updated_at AFTER UPDATE ON customers
+BEGIN
+  UPDATE customers SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+END;
+
 -- Vendors Table
 CREATE TABLE IF NOT EXISTS vendors (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
