@@ -1,0 +1,24 @@
+{
+  "name": "@vmd/backend",
+  "version": "1.0.0",
+  "description": "VMDHub Backend - Express API server",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "build": "echo 'Backend - no build step required'",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@vmd/shared": "*",
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0",
+    "helmet": "^7.0.0",
+    "better-sqlite3": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0",
+    "eslint": "^8.0.0"
+  }
+}

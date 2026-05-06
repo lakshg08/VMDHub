@@ -1,0 +1,32 @@
+{
+  "name": "vmdhub-monorepo",
+  "version": "1.0.0",
+  "description": "VMDHub - Cross-platform vendor management and invoice system",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run bootstrap",
+    "bootstrap": "lerna bootstrap",
+    "build:all": "lerna run build",
+    "build:web": "lerna run build --scope=@vmd/web",
+    "build:desktop": "lerna run build --scope=@vmd/desktop",
+    "build:mobile": "lerna run build --scope=@vmd/mobile",
+    "build:shared": "lerna run build --scope=@vmd/shared",
+    "build:backend": "lerna run build --scope=@vmd/backend",
+    "dev:web": "lerna run dev --scope=@vmd/web",
+    "dev:desktop": "lerna run dev --scope=@vmd/desktop",
+    "dev:mobile": "lerna run dev --scope=@vmd/mobile",
+    "dev:backend": "lerna run dev --scope=@vmd/backend",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "clean": "lerna clean --yes && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "lerna": "^7.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0"
+  }
+}

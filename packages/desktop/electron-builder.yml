@@ -1,0 +1,55 @@
+appId: com.vmdhub.desktop
+productName: VMDHub
+copyright: Copyright © 2024 VMDHub
+
+directories:
+  output: dist
+  buildResources: assets
+
+files:
+  - build/**/*
+  - src/main/**/*
+  - src/backend/**/*
+  - node_modules/**/*
+  - package.json
+
+win:
+  target:
+    - nsis
+    - portable
+  icon: assets/icon.ico
+
+mac:
+  target:
+    - dmg
+    - zip
+  icon: assets/icon.icns
+  category: public.app-category.finance
+
+linux:
+  target:
+    - AppImage
+    - deb
+  icon: assets/icon.png
+  category: Office
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+dmg:
+  title: VMDHub ${version}
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+publish:
+  provider: github
+  owner: vmdhub
+  repo: vmdhub-desktop

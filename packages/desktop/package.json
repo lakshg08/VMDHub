@@ -1,0 +1,37 @@
+{
+  "name": "@vmd/desktop",
+  "version": "1.0.0",
+  "description": "VMDHub Desktop - Electron application",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run dev:react\" \"wait-on http://localhost:3000 && electron .\"",
+    "dev:react": "cross-env BROWSER=none react-scripts start",
+    "build": "npm run build:react && electron-builder",
+    "build:react": "react-scripts build",
+    "build:win": "npm run build:react && electron-builder -w",
+    "build:mac": "npm run build:react && electron-builder -m",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@vmd/shared": "*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.0",
+    "recharts": "^2.5.0",
+    "better-sqlite3": "^9.0.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "react-scripts": "5.0.1",
+    "concurrently": "^8.0.0",
+    "wait-on": "^7.0.0",
+    "cross-env": "^7.0.0"
+  },
+  "homepage": "./",
+  "browserslist": {
+    "production": ["last 1 electron version"],
+    "development": ["last 1 electron version"]
+  }
+}
