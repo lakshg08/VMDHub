@@ -61,9 +61,9 @@ const productQueries = {
   ).all(vendorId),
   create: (db, data) => {
     const stmt = db.prepare(`
-      INSERT INTO products (name, sku, vendor_id, category, cost_price, selling_price,
+      INSERT INTO products (name, sku, vendor_id, category, hsn_code, cost_price, selling_price,
       gst_rate, quantity_in_stock, unit, notes)
-      VALUES (@name, @sku, @vendor_id, @category, @cost_price, @selling_price,
+      VALUES (@name, @sku, @vendor_id, @category, @hsn_code, @cost_price, @selling_price,
       @gst_rate, @quantity_in_stock, @unit, @notes)
     `);
     return stmt.run(data);
@@ -71,7 +71,7 @@ const productQueries = {
   update: (db, id, data) => {
     const stmt = db.prepare(`
       UPDATE products SET name=@name, sku=@sku, vendor_id=@vendor_id, category=@category,
-      cost_price=@cost_price, selling_price=@selling_price, gst_rate=@gst_rate,
+      hsn_code=@hsn_code, cost_price=@cost_price, selling_price=@selling_price, gst_rate=@gst_rate,
       quantity_in_stock=@quantity_in_stock, unit=@unit, notes=@notes WHERE id=@id
     `);
     return stmt.run({ ...data, id });

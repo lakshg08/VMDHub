@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS products (
   category TEXT,
   cost_price DECIMAL(10,2) NOT NULL,
   selling_price DECIMAL(10,2) NOT NULL,
+  hsn_code TEXT NOT NULL DEFAULT '',
   gst_rate DECIMAL(5,2) NOT NULL DEFAULT 18,
   quantity_in_stock INTEGER DEFAULT 0,
   unit TEXT DEFAULT 'pcs',

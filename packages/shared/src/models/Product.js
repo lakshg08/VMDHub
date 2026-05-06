@@ -8,6 +8,7 @@ class Product {
     this.category = data.category || '';
     this.costPrice = parseFloat(data.cost_price || data.costPrice || 0);
     this.sellingPrice = parseFloat(data.selling_price || data.sellingPrice || 0);
+    this.hsnCode = data.hsn_code || data.hsnCode || '';
     this.gstRate = parseFloat(data.gst_rate || data.gstRate || 18);
     this.quantityInStock = parseInt(data.quantity_in_stock || data.quantityInStock || 0, 10);
     this.unit = data.unit || 'pcs';
@@ -35,6 +36,7 @@ class Product {
       sku: this.sku,
       vendor_id: this.vendorId,
       category: this.category,
+      hsn_code: this.hsnCode,
       cost_price: this.costPrice,
       selling_price: this.sellingPrice,
       gst_rate: this.gstRate,
@@ -52,6 +54,7 @@ class Product {
       vendorId: this.vendorId,
       vendorName: this.vendorName,
       category: this.category,
+      hsnCode: this.hsnCode,
       costPrice: this.costPrice,
       sellingPrice: this.sellingPrice,
       gstRate: this.gstRate,
@@ -73,6 +76,8 @@ class Product {
     const errors = [];
     if (!this.name || this.name.trim() === '') errors.push('Product name is required');
     if (!this.sku || this.sku.trim() === '') errors.push('SKU is required');
+    if (!this.hsnCode || this.hsnCode.trim() === '') errors.push('HSN code is required');
+    if (!/^\d{4,8}$/.test(this.hsnCode.trim())) errors.push('HSN code must be 4–8 digits');
     if (!this.vendorId) errors.push('Vendor is required');
     if (this.costPrice < 0) errors.push('Cost price cannot be negative');
     if (this.sellingPrice < 0) errors.push('Selling price cannot be negative');

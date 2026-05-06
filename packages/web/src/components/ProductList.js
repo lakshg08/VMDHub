@@ -4,7 +4,7 @@ const API = 'http://localhost:3001/api';
 const GST_RATES = [0, 0.1, 0.25, 1, 1.5, 3, 5, 6, 7.5, 12, 18, 28];
 const UNITS = ['pcs', 'kg', 'g', 'l', 'ml', 'm', 'cm', 'box', 'pack', 'set', 'dozen'];
 
-const EMPTY_PRODUCT = { name: '', sku: '', vendor_id: '', category: '', cost_price: '', selling_price: '', gst_rate: 18, quantity_in_stock: 0, unit: 'pcs', notes: '' };
+const EMPTY_PRODUCT = { name: '', sku: '', vendor_id: '', category: '', hsn_code: '', cost_price: '', selling_price: '', gst_rate: 18, quantity_in_stock: 0, unit: 'pcs', notes: '' };
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
@@ -66,7 +66,7 @@ export default function ProductList() {
 
   function openEdit(p) {
     setEditing(p);
-    setForm({ name: p.name, sku: p.sku, vendor_id: p.vendor_id, category: p.category || '', cost_price: p.cost_price, selling_price: p.selling_price, gst_rate: p.gst_rate, quantity_in_stock: p.quantity_in_stock, unit: p.unit, notes: p.notes || '' });
+    setForm({ name: p.name, sku: p.sku, vendor_id: p.vendor_id, category: p.category || '', hsn_code: p.hsn_code || '', cost_price: p.cost_price, selling_price: p.selling_price, gst_rate: p.gst_rate, quantity_in_stock: p.quantity_in_stock, unit: p.unit, notes: p.notes || '' });
     setShowModal(true);
   }
 
@@ -104,7 +104,7 @@ export default function ProductList() {
           <table>
             <thead>
               <tr>
-                <th>Name</th><th>SKU</th><th>Vendor</th><th>Category</th>
+                <th>Name</th><th>SKU</th><th>HSN</th><th>Vendor</th><th>Category</th>
                 <th>Cost</th><th>Sell Price</th><th>Margin</th><th>GST</th><th>Stock</th><th>Actions</th>
               </tr>
             </thead>
@@ -113,6 +113,7 @@ export default function ProductList() {
                 <tr key={p.id}>
                   <td><strong>{p.name}</strong></td>
                   <td><code>{p.sku}</code></td>
+                  <td><code>{p.hsn_code}</code></td>
                   <td>{p.vendor_name}</td>
                   <td>{p.category || '-'}</td>
                   <td>₹{parseFloat(p.cost_price).toFixed(2)}</td>
@@ -147,6 +148,10 @@ export default function ProductList() {
                 <div className="form-group">
                   <label>SKU *</label>
                   <input className="form-control" required value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} />
+                </div>
+                <div className="form-group">
+                  <label>HSN Code *</label>
+                  <input className="form-control" required pattern="\d{4,8}" title="4–8 digit HSN code" value={form.hsn_code} onChange={e => setForm({ ...form, hsn_code: e.target.value })} placeholder="e.g. 85171200" />
                 </div>
                 <div className="form-group">
                   <label>Vendor *</label>
