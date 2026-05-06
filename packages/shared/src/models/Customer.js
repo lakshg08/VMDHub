@@ -4,7 +4,8 @@ class Customer {
     this.name = data.name || '';
     this.email = data.email || '';
     this.phone = data.phone || '';
-    this.address = data.address || '';
+    this.shipToAddress = data.ship_to_address || data.shipToAddress || '';
+    this.billToAddress = data.bill_to_address || data.billToAddress || '';
     this.gstNumber = data.gst_number || data.gstNumber || '';
     this.createdAt = data.created_at || data.createdAt || new Date().toISOString();
     this.updatedAt = data.updated_at || data.updatedAt || new Date().toISOString();
@@ -20,7 +21,8 @@ class Customer {
       name: this.name,
       email: this.email,
       phone: this.phone,
-      address: this.address,
+      ship_to_address: this.shipToAddress || null,
+      bill_to_address: this.billToAddress || null,
       gst_number: this.gstNumber || null,
     };
   }
@@ -31,7 +33,8 @@ class Customer {
       name: this.name,
       email: this.email,
       phone: this.phone,
-      address: this.address,
+      shipToAddress: this.shipToAddress,
+      billToAddress: this.billToAddress,
       gstNumber: this.gstNumber,
       customerType: this.customerType,
       createdAt: this.createdAt,

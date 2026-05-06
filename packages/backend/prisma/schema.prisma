@@ -9,14 +9,15 @@ datasource db {
 }
 
 model Customer {
-  id         Int      @id @default(autoincrement())
-  name       String
-  email      String?
-  phone      String?
-  address    String?
-  gst_number String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  name             String
+  email            String?
+  phone            String?
+  ship_to_address  String?
+  bill_to_address  String?
+  gst_number       String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
   @@map("customers")
 }

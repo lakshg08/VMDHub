@@ -9,7 +9,8 @@
 | name | TEXT NOT NULL | |
 | email | TEXT | |
 | phone | TEXT | |
-| address | TEXT | |
+| ship_to_address | TEXT | Delivery / shipping address |
+| bill_to_address | TEXT | Invoice / billing address |
 | gst_number | TEXT | Format: 22AAAAA0000A1Z5 |
 | created_at | TIMESTAMP | Default current |
 | updated_at | TIMESTAMP | Auto-updated |

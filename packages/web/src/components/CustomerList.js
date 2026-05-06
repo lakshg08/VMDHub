@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const API = 'http://localhost:3001/api';
 
-const EMPTY_CUSTOMER = { name: '', email: '', phone: '', address: '', gst_number: '' };
+const EMPTY_CUSTOMER = { name: '', email: '', phone: '', ship_to_address: '', bill_to_address: '', gst_number: '' };
 
 export default function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -71,7 +71,8 @@ export default function CustomerList() {
       name: c.name,
       email: c.email || '',
       phone: c.phone || '',
-      address: c.address || '',
+      ship_to_address: c.shipToAddress || '',
+      bill_to_address: c.billToAddress || '',
       gst_number: c.gstNumber || '',
     });
     setShowModal(true);
@@ -249,13 +250,24 @@ export default function CustomerList() {
               </div>
 
               <div className="form-group">
-                <label>Address</label>
+                <label>Bill To Address</label>
                 <textarea
                   className="form-control"
                   rows={3}
-                  value={form.address}
-                  onChange={e => setForm({ ...form, address: e.target.value })}
-                  placeholder="Full billing address"
+                  value={form.bill_to_address}
+                  onChange={e => setForm({ ...form, bill_to_address: e.target.value })}
+                  placeholder="Billing address"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Ship To Address</label>
+                <textarea
+                  className="form-control"
+                  rows={3}
+                  value={form.ship_to_address}
+                  onChange={e => setForm({ ...form, ship_to_address: e.target.value })}
+                  placeholder="Shipping address (if different from billing)"
                 />
               </div>
 
