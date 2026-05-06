@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../shared/src/database/generated"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String?
+  phone      String?
+  address    String?
+  gst_number String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("customers")
+}
+
+model Vendor {
+  id             Int       @id @default(autoincrement())
+  name           String    @unique
+  contact_person String?
+  email          String?
+  phone          String?
+  address        String?
+  gst_number     String?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  products       Product[]
+
+  @@map("vendors")
+}
+
+model Product {
+  id                Int           @id @default(autoincrement())
+  name              String
+  sku               String        @unique
+  vendor_id         Int
+  category          String?
+  cost_price        Float
+  selling_price     Float
+  hsn_code          String        @default("")
+  gst_rate          Float         @default(18)
+  quantity_in_stock Int           @default(0)
+  unit              String        @default("pcs")
+  notes             String?
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
+  vendor            Vendor        @relation(fields: [vendor_id], references: [id])
+  invoice_items     InvoiceItem[]
+
+  @@map("products")
+}
+
+model Invoice {
+  id                      Int           @id @default(autoincrement())
+  invoice_number          String        @unique
+  invoice_date            String
+  invoice_type            String
+  customer_name           String
+  customer_email          String?
+  customer_address        String?
+  customer_gst            String?
+  total_amount_before_tax Float         @default(0)
+  total_igst              Float         @default(0)
+  total_cgst              Float         @default(0)
+  total_sgst              Float         @default(0)
+  total_tax               Float         @default(0)
+  total_amount_after_tax  Float         @default(0)
+  status                  String        @default("draft")
+  notes                   String?
+  created_at              DateTime      @default(now())
+  updated_at              DateTime      @updatedAt
+  items                   InvoiceItem[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id             Int      @id @default(autoincrement())
+  invoice_id     Int
+  product_id     Int?
+  item_name      String
+  quantity       Float
+  unit_price     Float
+  cost_price     Float    @default(0)
+  amount         Float
+  gst_rate       Float    @default(0)
+  hsn_code       String   @default("")
+  igst           Float    @default(0)
+  cgst           Float    @default(0)
+  sgst           Float    @default(0)
+  total_with_tax Float
+  created_at     DateTime @default(now())
+  invoice        Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  product        Product? @relation(fields: [product_id], references: [id])
+
+  @@map("invoice_items")
+}
+
+model MonthlyGst {
+  id          Int      @id @default(autoincrement())
+  year_month  String   @unique
+  input_igst  Float    @default(0)
+  input_cgst  Float    @default(0)
+  input_sgst  Float    @default(0)
+  input_notes String?
+  output_igst Float    @default(0)
+  output_cgst Float    @default(0)
+  output_sgst Float    @default(0)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("monthly_gst")
+}
+
+model Settings {
+  id                   Int      @id @default(autoincrement())
+  company_name         String?
+  company_email        String?
+  company_address      String?
+  company_gst          String?
+  company_phone        String?
+  company_website      String?
+  financial_year_start Int      @default(4)
+  currency             String   @default("INR")
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model BackupHistory {
+  id              Int      @id @default(autoincrement())
+  backup_date     DateTime @default(now())
+  backup_filename String?
+  backup_size     Int?
+  backup_location String?
+  backup_type     String?
+
+  @@map("backup_history")
+}

@@ -8,8 +8,10 @@ class InvoiceItem {
     this.itemName = data.item_name || data.itemName || '';
     this.quantity = parseFloat(data.quantity || 0);
     this.unitPrice = parseFloat(data.unit_price || data.unitPrice || 0);
+    this.costPrice = parseFloat(data.cost_price || data.costPrice || 0);
     this.amount = parseFloat(data.amount || 0);
     this.gstRate = parseFloat(data.gst_rate || data.gstRate || 0);
+    this.hsnCode = data.hsn_code || data.hsnCode || '';
     this.igst = parseFloat(data.igst || 0);
     this.cgst = parseFloat(data.cgst || 0);
     this.sgst = parseFloat(data.sgst || 0);
@@ -32,8 +34,10 @@ class InvoiceItem {
       item_name: this.itemName,
       quantity: this.quantity,
       unit_price: this.unitPrice,
+      cost_price: this.costPrice,
       amount: this.amount,
       gst_rate: this.gstRate,
+      hsn_code: this.hsnCode,
       igst: this.igst,
       cgst: this.cgst,
       sgst: this.sgst,
@@ -49,8 +53,10 @@ class InvoiceItem {
       itemName: this.itemName,
       quantity: this.quantity,
       unitPrice: this.unitPrice,
+      costPrice: this.costPrice,
       amount: this.amount,
       gstRate: this.gstRate,
+      hsnCode: this.hsnCode,
       igst: this.igst,
       cgst: this.cgst,
       sgst: this.sgst,

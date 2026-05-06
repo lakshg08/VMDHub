@@ -17,3 +17,9 @@ packages/mobile/android/app/build/
 packages/mobile/ios/build/
 packages/mobile/ios/Pods/
 packages/desktop/out/
+
+# Prisma generated client (regenerate with: cd packages/backend && npm run db:generate)
+packages/shared/src/database/generated/
+
+# Next.js
+packages/backend/.next/
