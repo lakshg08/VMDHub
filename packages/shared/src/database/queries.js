@@ -1,237 +1,207 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-const fs = require('fs');
-
-let db = null;
-
-function getDatabase(dbPath) {
-  if (!db) {
-    db = new Database(dbPath);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
-    initializeSchema(db);
-  }
-  return db;
-}
-
-function initializeSchema(database) {
-  const schemaPath = path.join(__dirname, 'schema.sql');
-  const schema = fs.readFileSync(schemaPath, 'utf8');
-  database.exec(schema);
-}
+const prisma = require('./prisma');
 
 // Customer queries
 const customerQueries = {
-  getAll: (db) => db.prepare('SELECT * FROM customers ORDER BY name').all(),
-  getById: (db, id) => db.prepare('SELECT * FROM customers WHERE id = ?').get(id),
-  getByType: (db, type) => {
+  getAll: () => prisma.customer.findMany({ orderBy: { name: 'asc' } }),
+
+  getById: (id) => prisma.customer.findUnique({ where: { id: Number(id) } }),
+
+  getByType: (type) => {
     if (type === 'corporate') {
-      return db.prepare("SELECT * FROM customers WHERE gst_number IS NOT NULL AND gst_number != '' ORDER BY name").all();
+      return prisma.customer.findMany({
+        where: { AND: [{ gst_number: { not: null } }, { gst_number: { not: '' } }] },
+        orderBy: { name: 'asc' },
+      });
     }
-    return db.prepare("SELECT * FROM customers WHERE gst_number IS NULL OR gst_number = '' ORDER BY name").all();
+    return prisma.customer.findMany({
+      where: { OR: [{ gst_number: null }, { gst_number: '' }] },
+      orderBy: { name: 'asc' },
+    });
   },
-  create: (db, data) => {
-    const stmt = db.prepare(`
-      INSERT INTO customers (name, email, phone, address, gst_number)
-      VALUES (@name, @email, @phone, @address, @gst_number)
-    `);
-    return stmt.run(data);
-  },
-  update: (db, id, data) => {
-    const stmt = db.prepare(`
-      UPDATE customers SET name=@name, email=@email, phone=@phone,
-      address=@address, gst_number=@gst_number WHERE id=@id
-    `);
-    return stmt.run({ ...data, id });
-  },
-  delete: (db, id) => db.prepare('DELETE FROM customers WHERE id = ?').run(id),
-  search: (db, query) => db.prepare(
-    "SELECT * FROM customers WHERE name LIKE ? OR email LIKE ? OR gst_number LIKE ?"
-  ).all(`%${query}%`, `%${query}%`, `%${query}%`),
+
+  create: (data) => prisma.customer.create({ data }),
+
+  update: (id, data) =>
+    prisma.customer.update({ where: { id: Number(id) }, data }),
+
+  delete: (id) => prisma.customer.delete({ where: { id: Number(id) } }),
+
+  search: (query) =>
+    prisma.customer.findMany({
+      where: {
+        OR: [
+          { name: { contains: query } },
+          { email: { contains: query } },
+          { gst_number: { contains: query } },
+        ],
+      },
+    }),
 };
 
 // Vendor queries
 const vendorQueries = {
-  getAll: (db) => db.prepare('SELECT * FROM vendors ORDER BY name').all(),
-  getById: (db, id) => db.prepare('SELECT * FROM vendors WHERE id = ?').get(id),
-  create: (db, data) => {
-    const stmt = db.prepare(`
-      INSERT INTO vendors (name, contact_person, email, phone, address, gst_number)
-      VALUES (@name, @contact_person, @email, @phone, @address, @gst_number)
-    `);
-    return stmt.run(data);
-  },
-  update: (db, id, data) => {
-    const stmt = db.prepare(`
-      UPDATE vendors SET name=@name, contact_person=@contact_person,
-      email=@email, phone=@phone, address=@address, gst_number=@gst_number
-      WHERE id=@id
-    `);
-    return stmt.run({ ...data, id });
-  },
-  delete: (db, id) => db.prepare('DELETE FROM vendors WHERE id = ?').run(id),
-  search: (db, query) => db.prepare(
-    "SELECT * FROM vendors WHERE name LIKE ? OR contact_person LIKE ? OR email LIKE ?"
-  ).all(`%${query}%`, `%${query}%`, `%${query}%`),
+  getAll: () => prisma.vendor.findMany({ orderBy: { name: 'asc' } }),
+
+  getById: (id) => prisma.vendor.findUnique({ where: { id: Number(id) } }),
+
+  create: (data) => prisma.vendor.create({ data }),
+
+  update: (id, data) =>
+    prisma.vendor.update({ where: { id: Number(id) }, data }),
+
+  delete: (id) => prisma.vendor.delete({ where: { id: Number(id) } }),
+
+  search: (query) =>
+    prisma.vendor.findMany({
+      where: {
+        OR: [
+          { name: { contains: query } },
+          { contact_person: { contains: query } },
+          { email: { contains: query } },
+        ],
+      },
+    }),
 };
 
 // Product queries
 const productQueries = {
-  getAll: (db) => db.prepare(`
-    SELECT p.*, v.name as vendor_name FROM products p
-    LEFT JOIN vendors v ON p.vendor_id = v.id
-    ORDER BY p.name
-  `).all(),
-  getById: (db, id) => db.prepare(`
-    SELECT p.*, v.name as vendor_name FROM products p
-    LEFT JOIN vendors v ON p.vendor_id = v.id WHERE p.id = ?
-  `).get(id),
-  getByVendor: (db, vendorId) => db.prepare(
-    'SELECT * FROM products WHERE vendor_id = ? ORDER BY name'
-  ).all(vendorId),
-  create: (db, data) => {
-    const stmt = db.prepare(`
-      INSERT INTO products (name, sku, vendor_id, category, hsn_code, cost_price, selling_price,
-      gst_rate, quantity_in_stock, unit, notes)
-      VALUES (@name, @sku, @vendor_id, @category, @hsn_code, @cost_price, @selling_price,
-      @gst_rate, @quantity_in_stock, @unit, @notes)
-    `);
-    return stmt.run(data);
+  getAll: async () => {
+    const products = await prisma.product.findMany({
+      include: { vendor: { select: { name: true } } },
+      orderBy: { name: 'asc' },
+    });
+    return products.map(({ vendor, ...p }) => ({ ...p, vendor_name: vendor?.name ?? null }));
   },
-  update: (db, id, data) => {
-    const stmt = db.prepare(`
-      UPDATE products SET name=@name, sku=@sku, vendor_id=@vendor_id, category=@category,
-      hsn_code=@hsn_code, cost_price=@cost_price, selling_price=@selling_price, gst_rate=@gst_rate,
-      quantity_in_stock=@quantity_in_stock, unit=@unit, notes=@notes WHERE id=@id
-    `);
-    return stmt.run({ ...data, id });
+
+  getById: async (id) => {
+    const p = await prisma.product.findUnique({
+      where: { id: Number(id) },
+      include: { vendor: { select: { name: true } } },
+    });
+    if (!p) return null;
+    const { vendor, ...rest } = p;
+    return { ...rest, vendor_name: vendor?.name ?? null };
   },
-  delete: (db, id) => db.prepare('DELETE FROM products WHERE id = ?').run(id),
-  updateStock: (db, id, quantity) => db.prepare(
-    'UPDATE products SET quantity_in_stock = quantity_in_stock + ? WHERE id = ?'
-  ).run(quantity, id),
+
+  getByVendor: (vendorId) =>
+    prisma.product.findMany({
+      where: { vendor_id: Number(vendorId) },
+      orderBy: { name: 'asc' },
+    }),
+
+  create: (data) => prisma.product.create({ data }),
+
+  update: (id, data) =>
+    prisma.product.update({ where: { id: Number(id) }, data }),
+
+  delete: (id) => prisma.product.delete({ where: { id: Number(id) } }),
+
+  updateStock: (id, quantity) =>
+    prisma.product.update({
+      where: { id: Number(id) },
+      data: { quantity_in_stock: { increment: quantity } },
+    }),
 };
 
 // Invoice queries
 const invoiceQueries = {
-  getAll: (db) => db.prepare('SELECT * FROM invoices ORDER BY invoice_date DESC').all(),
-  getById: (db, id) => db.prepare('SELECT * FROM invoices WHERE id = ?').get(id),
-  getByNumber: (db, number) => db.prepare('SELECT * FROM invoices WHERE invoice_number = ?').get(number),
-  getWithItems: (db, id) => {
-    const invoice = db.prepare('SELECT * FROM invoices WHERE id = ?').get(id);
-    if (invoice) {
-      invoice.items = db.prepare('SELECT * FROM invoice_items WHERE invoice_id = ?').all(id);
-    }
-    return invoice;
-  },
-  getByDateRange: (db, startDate, endDate) => db.prepare(
-    'SELECT * FROM invoices WHERE invoice_date BETWEEN ? AND ? ORDER BY invoice_date DESC'
-  ).all(startDate, endDate),
-  getByMonth: (db, yearMonth) => db.prepare(
-    "SELECT * FROM invoices WHERE strftime('%Y-%m', invoice_date) = ? ORDER BY invoice_date DESC"
-  ).all(yearMonth),
-  create: (db, data) => {
-    const stmt = db.prepare(`
-      INSERT INTO invoices (invoice_number, invoice_date, invoice_type, customer_name,
-      customer_email, customer_address, customer_gst, total_amount_before_tax, total_igst,
-      total_cgst, total_sgst, total_tax, total_amount_after_tax, status, notes)
-      VALUES (@invoice_number, @invoice_date, @invoice_type, @customer_name,
-      @customer_email, @customer_address, @customer_gst, @total_amount_before_tax,
-      @total_igst, @total_cgst, @total_sgst, @total_tax, @total_amount_after_tax, @status, @notes)
-    `);
-    return stmt.run(data);
-  },
-  update: (db, id, data) => {
-    const stmt = db.prepare(`
-      UPDATE invoices SET invoice_number=@invoice_number, invoice_date=@invoice_date,
-      invoice_type=@invoice_type, customer_name=@customer_name, customer_email=@customer_email,
-      customer_address=@customer_address, customer_gst=@customer_gst,
-      total_amount_before_tax=@total_amount_before_tax, total_igst=@total_igst,
-      total_cgst=@total_cgst, total_sgst=@total_sgst, total_tax=@total_tax,
-      total_amount_after_tax=@total_amount_after_tax, status=@status, notes=@notes
-      WHERE id=@id
-    `);
-    return stmt.run({ ...data, id });
-  },
-  delete: (db, id) => db.prepare('DELETE FROM invoices WHERE id = ?').run(id),
-  getNextNumber: (db) => {
-    const last = db.prepare(
-      "SELECT invoice_number FROM invoices ORDER BY id DESC LIMIT 1"
-    ).get();
+  getAll: () => prisma.invoice.findMany({ orderBy: { invoice_date: 'desc' } }),
+
+  getById: (id) => prisma.invoice.findUnique({ where: { id: Number(id) } }),
+
+  getByNumber: (number) =>
+    prisma.invoice.findUnique({ where: { invoice_number: number } }),
+
+  getWithItems: (id) =>
+    prisma.invoice.findUnique({
+      where: { id: Number(id) },
+      include: { items: true },
+    }),
+
+  getByDateRange: (startDate, endDate) =>
+    prisma.invoice.findMany({
+      where: { invoice_date: { gte: startDate, lte: endDate } },
+      orderBy: { invoice_date: 'desc' },
+    }),
+
+  getByMonth: (yearMonth) =>
+    prisma.invoice.findMany({
+      where: { invoice_date: { startsWith: yearMonth } },
+      orderBy: { invoice_date: 'desc' },
+    }),
+
+  create: (data) => prisma.invoice.create({ data }),
+
+  update: (id, data) =>
+    prisma.invoice.update({ where: { id: Number(id) }, data }),
+
+  delete: (id) => prisma.invoice.delete({ where: { id: Number(id) } }),
+
+  getNextNumber: async () => {
+    const last = await prisma.invoice.findFirst({
+      orderBy: { id: 'desc' },
+      select: { invoice_number: true },
+    });
     if (!last) return 'INV-0001';
     const num = parseInt(last.invoice_number.replace('INV-', ''), 10) + 1;
     return `INV-${String(num).padStart(4, '0')}`;
   },
 };
 
-// Invoice items queries
+// Invoice item queries
 const invoiceItemQueries = {
-  getByInvoice: (db, invoiceId) => db.prepare(
-    'SELECT * FROM invoice_items WHERE invoice_id = ?'
-  ).all(invoiceId),
-  create: (db, data) => {
-    const stmt = db.prepare(`
-      INSERT INTO invoice_items (invoice_id, product_id, item_name, quantity, unit_price,
-      amount, gst_rate, igst, cgst, sgst, total_with_tax)
-      VALUES (@invoice_id, @product_id, @item_name, @quantity, @unit_price,
-      @amount, @gst_rate, @igst, @cgst, @sgst, @total_with_tax)
-    `);
-    return stmt.run(data);
-  },
-  deleteByInvoice: (db, invoiceId) => db.prepare(
-    'DELETE FROM invoice_items WHERE invoice_id = ?'
-  ).run(invoiceId),
+  getByInvoice: (invoiceId) =>
+    prisma.invoiceItem.findMany({ where: { invoice_id: Number(invoiceId) } }),
+
+  create: (data) => prisma.invoiceItem.create({ data }),
+
+  deleteByInvoice: (invoiceId) =>
+    prisma.invoiceItem.deleteMany({ where: { invoice_id: Number(invoiceId) } }),
 };
 
 // GST queries
 const gstQueries = {
-  getAll: (db) => db.prepare('SELECT * FROM monthly_gst ORDER BY year_month DESC').all(),
-  getByMonth: (db, yearMonth) => db.prepare(
-    'SELECT * FROM monthly_gst WHERE year_month = ?'
-  ).get(yearMonth),
-  upsert: (db, data) => {
-    const stmt = db.prepare(`
-      INSERT INTO monthly_gst (year_month, input_igst, input_cgst, input_sgst,
-      input_notes, output_igst, output_cgst, output_sgst)
-      VALUES (@year_month, @input_igst, @input_cgst, @input_sgst, @input_notes,
-      @output_igst, @output_cgst, @output_sgst)
-      ON CONFLICT(year_month) DO UPDATE SET
-      input_igst=excluded.input_igst, input_cgst=excluded.input_cgst,
-      input_sgst=excluded.input_sgst, input_notes=excluded.input_notes,
-      output_igst=excluded.output_igst, output_cgst=excluded.output_cgst,
-      output_sgst=excluded.output_sgst, updated_at=CURRENT_TIMESTAMP
-    `);
-    return stmt.run(data);
-  },
+  getAll: () => prisma.monthlyGst.findMany({ orderBy: { year_month: 'desc' } }),
+
+  getByYear: (year) =>
+    prisma.monthlyGst.findMany({
+      where: { year_month: { startsWith: year } },
+      orderBy: { year_month: 'asc' },
+    }),
+
+  getByMonth: (yearMonth) =>
+    prisma.monthlyGst.findUnique({ where: { year_month: yearMonth } }),
+
+  upsert: (data) =>
+    prisma.monthlyGst.upsert({
+      where: { year_month: data.year_month },
+      create: data,
+      update: {
+        input_igst: data.input_igst,
+        input_cgst: data.input_cgst,
+        input_sgst: data.input_sgst,
+        input_notes: data.input_notes,
+        output_igst: data.output_igst,
+        output_cgst: data.output_cgst,
+        output_sgst: data.output_sgst,
+      },
+    }),
 };
 
 // Settings queries
 const settingsQueries = {
-  get: (db) => db.prepare('SELECT * FROM settings LIMIT 1').get(),
-  upsert: (db, data) => {
-    const existing = db.prepare('SELECT id FROM settings LIMIT 1').get();
+  get: () => prisma.settings.findFirst(),
+
+  upsert: async (data) => {
+    const existing = await prisma.settings.findFirst();
     if (existing) {
-      const stmt = db.prepare(`
-        UPDATE settings SET company_name=@company_name, company_email=@company_email,
-        company_address=@company_address, company_gst=@company_gst,
-        company_phone=@company_phone, company_website=@company_website,
-        financial_year_start=@financial_year_start, currency=@currency
-        WHERE id=@id
-      `);
-      return stmt.run({ ...data, id: existing.id });
+      return prisma.settings.update({ where: { id: existing.id }, data });
     }
-    const stmt = db.prepare(`
-      INSERT INTO settings (company_name, company_email, company_address, company_gst,
-      company_phone, company_website, financial_year_start, currency)
-      VALUES (@company_name, @company_email, @company_address, @company_gst,
-      @company_phone, @company_website, @financial_year_start, @currency)
-    `);
-    return stmt.run(data);
+    return prisma.settings.create({ data });
   },
 };
 
 module.exports = {
-  getDatabase,
   customerQueries,
   vendorQueries,
   productQueries,

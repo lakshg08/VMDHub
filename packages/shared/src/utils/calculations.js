@@ -20,12 +20,13 @@ class Calculations {
 
       const items = invoice.items || [];
       for (const item of items) {
+        const qty = item.quantity || 0;
+        // Prefer cost_price snapshotted at invoice time; fall back to current product
+        // for rows created before the snapshot column was added (value will be 0).
+        const snapshotCost = item.cost_price || item.costPrice || 0;
         const product = productMap.get(item.product_id || item.productId);
-        if (product) {
-          const qty = item.quantity || 0;
-          const costPrice = product.cost_price || product.costPrice || 0;
-          cost += qty * costPrice;
-        }
+        const costPrice = snapshotCost || (product ? product.cost_price || product.costPrice || 0 : 0);
+        cost += qty * costPrice;
       }
     }
 

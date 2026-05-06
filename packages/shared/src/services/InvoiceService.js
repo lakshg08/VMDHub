@@ -1,87 +1,125 @@
-const { invoiceQueries, invoiceItemQueries } = require('../database/queries');
+const prisma = require('../database/prisma');
 const { Invoice, InvoiceItem } = require('../models/Invoice');
 const Validators = require('../utils/validators');
 
 class InvoiceService {
-  constructor(db) {
-    this.db = db;
+  async getAll() {
+    const rows = await prisma.invoice.findMany({ orderBy: { invoice_date: 'desc' } });
+    return rows.map((r) => new Invoice(r));
   }
 
-  getAll() {
-    const rows = invoiceQueries.getAll(this.db);
-    return rows.map(r => new Invoice(r));
-  }
-
-  getById(id) {
-    const row = invoiceQueries.getWithItems(this.db, id);
+  async getById(id) {
+    const row = await prisma.invoice.findUnique({
+      where: { id: Number(id) },
+      include: { items: true },
+    });
     if (!row) return null;
     return new Invoice(row);
   }
 
-  getByDateRange(startDate, endDate) {
-    const rows = invoiceQueries.getByDateRange(this.db, startDate, endDate);
-    return rows.map(r => new Invoice(r));
+  async getByDateRange(startDate, endDate) {
+    const rows = await prisma.invoice.findMany({
+      where: { invoice_date: { gte: startDate, lte: endDate } },
+      orderBy: { invoice_date: 'desc' },
+    });
+    return rows.map((r) => new Invoice(r));
   }
 
-  getByMonth(yearMonth) {
-    const rows = invoiceQueries.getByMonth(this.db, yearMonth);
-    return rows.map(r => new Invoice(r));
+  async getByMonth(yearMonth) {
+    const rows = await prisma.invoice.findMany({
+      where: { invoice_date: { startsWith: yearMonth } },
+      orderBy: { invoice_date: 'desc' },
+    });
+    return rows.map((r) => new Invoice(r));
   }
 
-  create(data) {
+  async create(data) {
     const invoice = new Invoice(data);
     invoice.calculateTotals();
 
     const errors = Validators.validateInvoice({ ...invoice.toDBObject(), items: invoice.items });
     if (errors.length > 0) throw new Error(errors.join('; '));
 
-    if (!invoice.invoiceNumber) {
-      invoice.invoiceNumber = invoiceQueries.getNextNumber(this.db);
-    }
+    await this._stampProductSnapshot(invoice.items);
 
-    const createWithItems = this.db.transaction(() => {
-      const result = invoiceQueries.create(this.db, invoice.toDBObject());
-      const invoiceId = result.lastInsertRowid;
-
-      for (const item of invoice.items) {
-        invoiceItemQueries.create(this.db, item.toDBObject(invoiceId));
+    const invoiceId = await prisma.$transaction(async (tx) => {
+      if (!invoice.invoiceNumber) {
+        const last = await tx.invoice.findFirst({
+          orderBy: { id: 'desc' },
+          select: { invoice_number: true },
+        });
+        if (!last) {
+          invoice.invoiceNumber = 'INV-0001';
+        } else {
+          const num = parseInt(last.invoice_number.replace('INV-', ''), 10) + 1;
+          invoice.invoiceNumber = `INV-${String(num).padStart(4, '0')}`;
+        }
       }
 
-      return invoiceId;
+      const created = await tx.invoice.create({ data: invoice.toDBObject() });
+
+      for (const item of invoice.items) {
+        await tx.invoiceItem.create({ data: item.toDBObject(created.id) });
+      }
+
+      return created.id;
     });
 
-    const invoiceId = createWithItems();
     return this.getById(invoiceId);
   }
 
-  update(id, data) {
-    const existing = this.getById(id);
+  async update(id, data) {
+    const existing = await this.getById(id);
     if (!existing) throw new Error('Invoice not found');
 
     const invoice = new Invoice({ ...existing.toJSON(), ...data });
     invoice.calculateTotals();
 
-    const updateWithItems = this.db.transaction(() => {
-      invoiceQueries.update(this.db, id, invoice.toDBObject());
-      invoiceItemQueries.deleteByInvoice(this.db, id);
+    await this._stampProductSnapshot(invoice.items);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.invoice.update({ where: { id: Number(id) }, data: invoice.toDBObject() });
+      await tx.invoiceItem.deleteMany({ where: { invoice_id: Number(id) } });
       for (const item of invoice.items) {
-        invoiceItemQueries.create(this.db, item.toDBObject(id));
+        await tx.invoiceItem.create({ data: item.toDBObject(Number(id)) });
       }
     });
 
-    updateWithItems();
     return this.getById(id);
   }
 
-  delete(id) {
-    const existing = this.getById(id);
+  async delete(id) {
+    const existing = await this.getById(id);
     if (!existing) throw new Error('Invoice not found');
-    invoiceQueries.delete(this.db, id);
+    await prisma.invoice.delete({ where: { id: Number(id) } });
     return true;
   }
 
-  getNextInvoiceNumber() {
-    return invoiceQueries.getNextNumber(this.db);
+  async _stampProductSnapshot(items) {
+    const productIds = [...new Set(items.map((i) => i.productId).filter(Boolean))];
+    if (!productIds.length) return;
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, cost_price: true, hsn_code: true },
+    });
+    const map = new Map(products.map((p) => [p.id, p]));
+    for (const item of items) {
+      const p = map.get(item.productId);
+      if (p) {
+        item.costPrice = p.cost_price;
+        item.hsnCode = p.hsn_code;
+      }
+    }
+  }
+
+  async getNextInvoiceNumber() {
+    const last = await prisma.invoice.findFirst({
+      orderBy: { id: 'desc' },
+      select: { invoice_number: true },
+    });
+    if (!last) return 'INV-0001';
+    const num = parseInt(last.invoice_number.replace('INV-', ''), 10) + 1;
+    return `INV-${String(num).padStart(4, '0')}`;
   }
 }
 

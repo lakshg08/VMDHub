@@ -1,24 +1,24 @@
 {
   "name": "@vmd/backend",
   "version": "1.0.0",
-  "description": "VMDHub Backend - Express API server",
-  "main": "src/server.js",
+  "description": "VMDHub Backend - Next.js API",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "build": "echo 'Backend - no build step required'",
-    "lint": "eslint src/"
+    "dev": "next dev -p 3001",
+    "start": "next start -p 3001",
+    "build": "next build",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "^5.14.0",
     "@vmd/shared": "*",
-    "express": "^4.18.0",
-    "cors": "^2.8.5",
-    "morgan": "^1.10.0",
-    "helmet": "^7.0.0",
-    "better-sqlite3": "^9.0.0"
+    "next": "^14.2.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.0",
-    "eslint": "^8.0.0"
+    "@types/node": "^20.0.0",
+    "prisma": "^5.14.0"
   }
 }
