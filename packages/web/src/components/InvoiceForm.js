@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 const GST_RATES = [0, 5, 12, 18, 28];
@@ -33,16 +34,16 @@ export default function InvoiceForm() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`${API}/products`).then(r => r.json()).then(setProducts);
+    apiFetch(`${API}/products`).then(r => r.json()).then(setProducts);
     if (id) loadInvoice(id);
     else {
       const today = new Date().toISOString().split('T')[0];
-      fetch(`${API}/invoices/next-number?date=${today}`).then(r => r.json()).then(d => setForm(f => ({ ...f, invoice_number: d.nextNumber })));
+      apiFetch(`${API}/invoices/next-number?date=${today}`).then(r => r.json()).then(d => setForm(f => ({ ...f, invoice_number: d.nextNumber })));
     }
   }, [id]);
 
   async function loadInvoice(invoiceId) {
-    const res = await fetch(`${API}/invoices/${invoiceId}`);
+    const res = await apiFetch(`${API}/invoices/${invoiceId}`);
     const inv = await res.json();
     setForm({
       invoice_number: inv.invoice_number, invoice_date: inv.invoice_date,
@@ -99,7 +100,7 @@ export default function InvoiceForm() {
       };
       const url = id ? `${API}/invoices/${id}` : `${API}/invoices`;
       const method = id ? 'PUT' : 'POST';
-      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const res = await apiFetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed to save invoice'); }
       navigate('/invoices');
     } catch (err) {

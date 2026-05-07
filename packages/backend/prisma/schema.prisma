@@ -50,6 +50,18 @@ model Product {
   quantity_in_stock Int           @default(0)
   unit              String        @default("pcs")
   notes             String?
+  description       String?
+  length            Float?
+  length_unit       String?
+  width             Float?
+  width_unit        String?
+  height            Float?
+  height_unit       String?
+  gauge             Float?
+  gauge_unit        String?
+  weight            Float?
+  weight_unit       String?
+  dimension         String?
   created_at        DateTime      @default(now())
   updated_at        DateTime      @updatedAt
   vendor            Vendor        @relation(fields: [vendor_id], references: [id])
@@ -145,4 +157,15 @@ model BackupHistory {
   backup_type     String?
 
   @@map("backup_history")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  password   String
+  role       String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("users")
 }

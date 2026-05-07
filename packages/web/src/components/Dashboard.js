@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 
@@ -15,8 +16,8 @@ export default function Dashboard() {
   async function fetchDashboardData() {
     try {
       const [summaryRes, monthlyRes] = await Promise.all([
-        fetch(`${API}/dashboard/summary`),
-        fetch(`${API}/dashboard/monthly`),
+        apiFetch(`${API}/dashboard/summary`),
+        apiFetch(`${API}/dashboard/monthly`),
       ]);
       const summaryData = await summaryRes.json();
       const monthly = await monthlyRes.json();

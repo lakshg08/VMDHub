@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 
@@ -18,7 +19,7 @@ export default function Settings() {
 
   async function fetchSettings() {
     try {
-      const res = await fetch(`${API}/settings`);
+      const res = await apiFetch(`${API}/settings`);
       const data = await res.json();
       if (data) setForm({ ...form, ...data });
     } catch (err) {
@@ -32,7 +33,7 @@ export default function Settings() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch(`${API}/settings`, {
+      const res = await apiFetch(`${API}/settings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -48,7 +49,7 @@ export default function Settings() {
   }
 
   async function handleExport() {
-    const res = await fetch(`${API}/backup/export`);
+    const res = await apiFetch(`${API}/backup/export`);
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -62,7 +63,7 @@ export default function Settings() {
     if (!file) return;
     const text = await file.text();
     try {
-      const res = await fetch(`${API}/backup/import`, {
+      const res = await apiFetch(`${API}/backup/import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ data: text }),
