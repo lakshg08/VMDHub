@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
-import { generateQuotationPdf } from '../lib/quotationPdf';
 
 const API = 'http://localhost:3001/api';
 
@@ -12,14 +11,12 @@ const STATUS_COLORS = {
 export default function QuotationList() {
   const navigate = useNavigate();
   const [quotations, setQuotations] = useState([]);
-  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [converting, setConverting] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadQuotations();
-    apiFetch(`${API}/settings`).then(r => r.json()).then(s => setSettings(s || {}));
   }, []);
 
   async function loadQuotations() {
@@ -60,14 +57,8 @@ export default function QuotationList() {
     }
   }
 
-  async function handleExportPdf(q) {
-    try {
-      const res = await apiFetch(`${API}/quotations/${q.id}`);
-      const full = await res.json();
-      generateQuotationPdf(full, settings);
-    } catch {
-      setError('Failed to generate PDF');
-    }
+  function handlePrint(q) {
+    window.open(`/print/quotation/${q.id}`, '_blank');
   }
 
   const counts = quotations.reduce((acc, q) => {
@@ -150,7 +141,7 @@ export default function QuotationList() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                      <button className="btn btn-outline btn-sm" onClick={() => handleExportPdf(q)} title="Export PDF">PDF</button>
+                      <button className="btn btn-outline btn-sm" onClick={() => handlePrint(q)}>Print</button>
                       {q.status !== 'converted' && (
                         <>
                           <button className="btn btn-outline btn-sm" onClick={() => navigate(`/quotations/${q.id}`)}>Edit</button>

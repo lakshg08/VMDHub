@@ -8,6 +8,7 @@ export default function Settings() {
     company_name: '', company_email: '', company_address: '',
     company_gst: '', company_phone: '', company_website: '',
     financial_year_start: 4, currency: 'INR',
+    upi_id: '', bank_name: '', bank_account_number: '', bank_account_type: '', bank_ifsc: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -142,6 +143,35 @@ export default function Settings() {
                 <option value={4}>April (India)</option>
                 <option value={7}>July</option>
               </select>
+            </div>
+          </div>
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3 style={{ marginBottom: 16 }}>Bank Details</h3>
+            <div className="grid-2">
+              <div className="form-group">
+                <label>UPI ID</label>
+                <input className="form-control" value={form.upi_id} onChange={e => setForm({ ...form, upi_id: e.target.value })} placeholder="yourname@bank" />
+              </div>
+              <div className="form-group">
+                <label>Bank Name</label>
+                <input className="form-control" value={form.bank_name} onChange={e => setForm({ ...form, bank_name: e.target.value })} placeholder="Punjab National Bank" />
+              </div>
+              <div className="form-group">
+                <label>Account Number</label>
+                <input className="form-control" value={form.bank_account_number} onChange={e => setForm({ ...form, bank_account_number: e.target.value })} placeholder="0000000000000000" />
+              </div>
+              <div className="form-group">
+                <label>Account Type</label>
+                <select className="form-control" value={form.bank_account_type} onChange={e => setForm({ ...form, bank_account_type: e.target.value })}>
+                  <option value="">— select —</option>
+                  <option value="Savings">Savings</option>
+                  <option value="Current">Current</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>IFSC Code</label>
+                <input className="form-control" value={form.bank_ifsc} onChange={e => setForm({ ...form, bank_ifsc: e.target.value.toUpperCase() })} placeholder="PUNB0237900" />
+              </div>
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

@@ -22,6 +22,11 @@ export async function POST(request) {
       company_website: body.company_website || '',
       financial_year_start: body.financial_year_start || 4,
       currency: body.currency || 'INR',
+      upi_id: body.upi_id || '',
+      bank_name: body.bank_name || '',
+      bank_account_number: body.bank_account_number || '',
+      bank_account_type: body.bank_account_type || '',
+      bank_ifsc: body.bank_ifsc || '',
     });
     const settings = await settingsQueries.get();
     return NextResponse.json(settings);

@@ -87,6 +87,11 @@ model Invoice {
   total_amount_after_tax  Float         @default(0)
   status                  String        @default("draft")
   notes                   String?
+  bank_upi_id             String?
+  bank_name               String?
+  bank_account_number     String?
+  bank_account_type       String?
+  bank_ifsc               String?
   created_at              DateTime      @default(now())
   updated_at              DateTime      @updatedAt
   items                   InvoiceItem[]
@@ -192,6 +197,11 @@ model Settings {
   company_website      String?
   financial_year_start Int      @default(4)
   currency             String   @default("INR")
+  upi_id               String?
+  bank_name            String?
+  bank_account_number  String?
+  bank_account_type    String?
+  bank_ifsc            String?
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
 

@@ -7,7 +7,9 @@ import CustomerList from './components/CustomerList';
 import VendorList from './components/VendorList';
 import ProductList from './components/ProductList';
 import InvoiceForm from './components/InvoiceForm';
+import InvoiceList from './components/InvoiceList';
 import InvoicePrint from './components/InvoicePrint';
+import QuotationPrint from './components/QuotationPrint';
 import QuotationList from './components/QuotationList';
 import QuotationForm from './components/QuotationForm';
 import PLStatement from './components/PLStatement';
@@ -148,6 +150,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/print/invoice/:id" element={<InvoicePrint />} />
+          <Route path="/print/quotation/:id" element={<QuotationPrint />} />
           <Route path="*" element={
             <>
               <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -169,7 +172,7 @@ export default function App() {
                     <Route path="/quotations" element={<QuotationList />} />
                     <Route path="/quotations/new" element={<QuotationForm />} />
                     <Route path="/quotations/:id" element={<QuotationForm />} />
-                    <Route path="/invoices" element={<InvoiceForm />} />
+                    <Route path="/invoices" element={<InvoiceList />} />
                     <Route path="/invoices/new" element={<InvoiceForm />} />
                     <Route path="/invoices/:id" element={<InvoiceForm />} />
                     <Route path="/pl" element={<PLStatement />} />

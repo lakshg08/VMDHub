@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
-import { generateQuotationPdf } from '../lib/quotationPdf';
 
 const API = 'http://localhost:3001/api';
 
@@ -54,7 +53,6 @@ export default function QuotationForm() {
     notes: '',
   });
   const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
-  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(false);
   const [converting, setConverting] = useState(false);
   const [error, setError] = useState('');
@@ -64,7 +62,6 @@ export default function QuotationForm() {
   useEffect(() => {
     apiFetch(`${API}/products`).then(r => r.json()).then(setProducts);
     apiFetch(`${API}/customers`).then(r => r.json()).then(setCustomers);
-    apiFetch(`${API}/settings`).then(r => r.json()).then(s => setSettings(s || {}));
 
     if (id) {
       loadQuotation(id);
@@ -211,38 +208,8 @@ export default function QuotationForm() {
     }
   }
 
-  function handleExportPdf() {
-    const quotationData = {
-      ...form,
-      quotationNumber: form.quotation_number,
-      quotationDate: form.quotation_date,
-      validUntil: form.valid_until,
-      invoiceType: form.invoice_type,
-      customerName: form.customer_name,
-      customerEmail: form.customer_email,
-      customerPhone: form.customer_phone,
-      customerGST: form.customer_gst,
-      customerAddress: form.customer_address,
-      totalAmountBeforeTax: totals.beforeTax,
-      totalIGST: totals.igst,
-      totalCGST: totals.cgst,
-      totalSGST: totals.sgst,
-      totalTax: totals.tax,
-      totalAmountAfterTax: totals.afterTax,
-      items: items.map(i => ({
-        itemName: i.item_name,
-        hsnCode: i.hsn_code || '',
-        quantity: i.quantity,
-        unitPrice: i.unit_price,
-        gstRate: i.gst_rate,
-        amount: i.amount,
-        igst: i.igst,
-        cgst: i.cgst,
-        sgst: i.sgst,
-        totalWithTax: i.total_with_tax,
-      })),
-    };
-    generateQuotationPdf(quotationData, settings);
+  function handlePrint() {
+    window.open(`/print/quotation/${id}`, '_blank');
   }
 
   async function handleConvert() {
@@ -279,8 +246,8 @@ export default function QuotationForm() {
         </h1>
         <div style={{ display: 'flex', gap: 8 }}>
           {id && (
-            <button className="btn btn-outline" onClick={handleExportPdf}>
-              Export PDF
+            <button className="btn btn-outline" onClick={handlePrint}>
+              Print Quotation
             </button>
           )}
           {id && !isConverted && (

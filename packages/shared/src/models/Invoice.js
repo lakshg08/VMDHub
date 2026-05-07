@@ -80,6 +80,11 @@ class Invoice {
     this.customerGST = data.customer_gst || data.customerGST || '';
     this.status = data.status || 'draft';
     this.notes = data.notes || '';
+    this.bankUpiId = data.bank_upi_id || data.bankUpiId || '';
+    this.bankName = data.bank_name || data.bankName || '';
+    this.bankAccountNumber = data.bank_account_number || data.bankAccountNumber || '';
+    this.bankAccountType = data.bank_account_type || data.bankAccountType || '';
+    this.bankIfsc = data.bank_ifsc || data.bankIfsc || '';
     this.items = (data.items || []).map(i => i instanceof InvoiceItem ? i : new InvoiceItem(i));
     this.totalAmountBeforeTax = parseFloat(data.total_amount_before_tax || data.totalAmountBeforeTax || 0);
     this.totalIGST = parseFloat(data.total_igst || data.totalIGST || 0);
@@ -135,6 +140,11 @@ class Invoice {
       total_amount_after_tax: this.totalAmountAfterTax,
       status: this.status,
       notes: this.notes,
+      bank_upi_id: this.bankUpiId,
+      bank_name: this.bankName,
+      bank_account_number: this.bankAccountNumber,
+      bank_account_type: this.bankAccountType,
+      bank_ifsc: this.bankIfsc,
     };
   }
 
@@ -150,6 +160,11 @@ class Invoice {
       customerGST: this.customerGST,
       status: this.status,
       notes: this.notes,
+      bankUpiId: this.bankUpiId,
+      bankName: this.bankName,
+      bankAccountNumber: this.bankAccountNumber,
+      bankAccountType: this.bankAccountType,
+      bankIfsc: this.bankIfsc,
       items: this.items.map(i => i.toJSON()),
       totalAmountBeforeTax: this.totalAmountBeforeTax,
       totalIGST: this.totalIGST,

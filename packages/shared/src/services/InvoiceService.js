@@ -41,6 +41,7 @@ class InvoiceService {
     if (errors.length > 0) throw new Error(errors.join('; '));
 
     await this._stampProductSnapshot(invoice.items);
+    await this._stampBankSnapshot(invoice);
 
     const invoiceId = await prisma.$transaction(async (tx) => {
       if (!invoice.invoiceNumber) {
@@ -95,6 +96,16 @@ class InvoiceService {
     if (!existing) throw new Error('Invoice not found');
     await prisma.invoice.delete({ where: { id: Number(id) } });
     return true;
+  }
+
+  async _stampBankSnapshot(invoice) {
+    const settings = await prisma.settings.findFirst();
+    if (!settings) return;
+    invoice.bankUpiId = settings.upi_id || '';
+    invoice.bankName = settings.bank_name || '';
+    invoice.bankAccountNumber = settings.bank_account_number || '';
+    invoice.bankAccountType = settings.bank_account_type || '';
+    invoice.bankIfsc = settings.bank_ifsc || '';
   }
 
   async _stampProductSnapshot(items) {
