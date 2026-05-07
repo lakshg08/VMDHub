@@ -6,7 +6,7 @@ class PLService {
     const invoices = await prisma.invoice.findMany({
       where: {
         invoice_date: { gte: startDate, lte: endDate },
-        NOT: { status: 'cancelled' },
+        status: 'paid',
       },
       include: { items: true },
     });
@@ -17,7 +17,7 @@ class PLService {
     const allInvoices = await prisma.invoice.findMany({
       where: {
         invoice_date: { startsWith: String(year) },
-        NOT: { status: 'cancelled' },
+        status: 'paid',
       },
       include: { items: true },
     });
@@ -53,7 +53,7 @@ class PLService {
     const [monthInvoices, vendorCount, productCount, totalInvoices, recentInvoices] =
       await Promise.all([
         prisma.invoice.findMany({
-          where: { invoice_date: { startsWith: currentMonth }, NOT: { status: 'cancelled' } },
+          where: { invoice_date: { startsWith: currentMonth }, status: 'paid' },
         }),
         prisma.vendor.count(),
         prisma.product.count(),

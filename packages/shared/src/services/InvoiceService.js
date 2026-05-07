@@ -109,7 +109,7 @@ class InvoiceService {
   }
 
   async _stampProductSnapshot(items) {
-    const productIds = [...new Set(items.map((i) => i.productId).filter(Boolean))];
+    const productIds = [...new Set(items.map((i) => i.productId).filter(Boolean).map(Number))].filter(n => !isNaN(n));
     if (!productIds.length) return;
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },

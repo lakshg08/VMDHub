@@ -166,7 +166,10 @@ export default function PrintDocument({ doc, bank = {} }) {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan={2}><div style={{ fontSize: 9, color: '#555' }}>Other References</div></td>
+                  <td colSpan={2}>
+                    <div style={{ fontSize: 9, color: '#555' }}>Transaction Reference</div>
+                    <div style={{ fontWeight: 600 }}>{doc.transactionReference || '—'}</div>
+                  </td>
                 </tr>
               </>
             )}
@@ -180,7 +183,11 @@ export default function PrintDocument({ doc, bank = {} }) {
               <td style={{ width: '50%', verticalAlign: 'top' }}>
                 <div style={{ fontSize: 9, color: '#555' }}>Consignee (Ship to)</div>
                 <div style={{ fontWeight: 700, marginTop: 2 }}>{doc.customerName}</div>
-                {doc.customerAddress && <div style={{ whiteSpace: 'pre-line', marginTop: 2 }}>{doc.customerAddress}</div>}
+                {(doc.shipToAddress || doc.customerAddress) && (
+                  <div style={{ whiteSpace: 'pre-line', marginTop: 2 }}>
+                    {doc.shipToAddress || doc.customerAddress}
+                  </div>
+                )}
                 {doc.customerGST && <div style={{ marginTop: 2 }}>GSTIN/UIN : {doc.customerGST}</div>}
               </td>
               <td style={{ width: '25%', verticalAlign: 'top' }}><div style={{ fontSize: 9, color: '#555' }}>Buyer's Order No.</div></td>
@@ -202,42 +209,53 @@ export default function PrintDocument({ doc, bank = {} }) {
           </tbody>
         </table>
 
-        {/* ── Items table (7 columns) ── */}
+        {/* ── Items table (10 columns) ── */}
         <table style={{ marginTop: -1 }}>
           <thead>
             <tr style={{ background: '#f5f5f5' }}>
-              <th style={{ width: '4%', textAlign: 'center' }}>Sl<br />No.</th>
+              <th style={{ width: '3%', textAlign: 'center' }}>Sl<br />No.</th>
               <th style={{ textAlign: 'left' }}>Description of Goods</th>
-              <th style={{ width: '10%', textAlign: 'center' }}>HSN/SAC</th>
-              <th style={{ width: '12%', textAlign: 'center' }}>Quantity</th>
-              <th style={{ width: '12%', textAlign: 'right' }}>Rate<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(Incl. GST)</span></th>
-              <th style={{ width: '6%', textAlign: 'center' }}>per</th>
-              <th style={{ width: '12%', textAlign: 'right' }}>Amount<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(Incl. GST)</span></th>
+              <th style={{ width: '8%', textAlign: 'center' }}>HSN/SAC</th>
+              <th style={{ width: '7%', textAlign: 'center' }}>Qty</th>
+              <th style={{ width: '9%', textAlign: 'right' }}>Rate<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(excl. GST)</span></th>
+              <th style={{ width: '5%', textAlign: 'center' }}>GST<br />%</th>
+              <th style={{ width: '8%', textAlign: 'right' }}>GST<br />Amt</th>
+              <th style={{ width: '9%', textAlign: 'right' }}>Rate<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(incl. GST)</span></th>
+              <th style={{ width: '5%', textAlign: 'center' }}>Per</th>
+              <th style={{ width: '10%', textAlign: 'right' }}>Amount<br /><span style={{ fontSize: 9, fontWeight: 400 }}>(incl. GST)</span></th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item, i) => (
-              <tr key={i}>
-                <td style={{ textAlign: 'center' }}>{i + 1}</td>
-                <td style={{ fontWeight: 600 }}>{item.itemName || item.item_name}</td>
-                <td style={{ textAlign: 'center' }}>{item.hsnCode || item.hsn_code || ''}</td>
-                <td style={{ textAlign: 'center', fontWeight: 600 }}>
-                  {item.quantity} {item.unit || 'PCS'}
-                </td>
-                <td style={{ textAlign: 'right' }}>{fmt(rateInclGst(item))}</td>
-                <td style={{ textAlign: 'center' }}>{item.unit || 'PCS'}</td>
-                <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(r2(item.totalWithTax || item.total_with_tax || 0))}</td>
-              </tr>
-            ))}
+            {items.map((item, i) => {
+              const gstAmt = r2((item.igst || 0) + (item.cgst || 0) + (item.sgst || 0));
+              const rateExcl = r2(item.unitPrice || item.unit_price || 0);
+              const gstPct = r2(item.gstRate || item.gst_rate || 0);
+              const rateIncl = r2(rateExcl * (1 + gstPct / 100));
+              const totalAmt = r2(item.totalWithTax || item.total_with_tax || 0);
+              return (
+                <tr key={i}>
+                  <td style={{ textAlign: 'center' }}>{i + 1}</td>
+                  <td style={{ fontWeight: 600 }}>{item.itemName || item.item_name}</td>
+                  <td style={{ textAlign: 'center' }}>{item.hsnCode || item.hsn_code || ''}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 600 }}>{item.quantity}</td>
+                  <td style={{ textAlign: 'right' }}>{fmt(rateExcl)}</td>
+                  <td style={{ textAlign: 'center' }}>{gstPct}%</td>
+                  <td style={{ textAlign: 'right' }}>{fmt(gstAmt)}</td>
+                  <td style={{ textAlign: 'right' }}>{fmt(rateIncl)}</td>
+                  <td style={{ textAlign: 'center' }}>{item.unit || 'PCS'}</td>
+                  <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(totalAmt)}</td>
+                </tr>
+              );
+            })}
 
             {Array.from({ length: PAD_ROWS }).map((_, i) => (
               <tr key={`pad-${i}`} style={{ height: 22 }}>
-                <td /><td /><td /><td /><td /><td /><td />
+                <td /><td /><td /><td /><td /><td /><td /><td /><td /><td />
               </tr>
             ))}
 
             <tr>
-              <td colSpan={6} style={{ textAlign: 'right', border: '1px solid #000', borderRight: 'none', color: '#555', fontSize: 10 }}>
+              <td colSpan={9} style={{ textAlign: 'right', border: '1px solid #000', borderRight: 'none', color: '#555', fontSize: 10 }}>
                 Sub-total (before tax)
               </td>
               <td style={{ textAlign: 'right', fontWeight: 600 }}>{fmt(subtotal)}</td>
@@ -248,8 +266,7 @@ export default function PrintDocument({ doc, bank = {} }) {
               if (isInterstate) {
                 return gst.igst > 0 ? (
                   <tr key={`igst-${rate}`}>
-                    <td colSpan={5} style={{ textAlign: 'right', fontStyle: 'italic' }}>IGST @ {rateNum}%</td>
-                    <td style={{ textAlign: 'center', fontStyle: 'italic' }}>{rateNum}%</td>
+                    <td colSpan={9} style={{ textAlign: 'right', fontStyle: 'italic' }}>IGST @ {rateNum}%</td>
                     <td style={{ textAlign: 'right' }}>{fmt(gst.igst)}</td>
                   </tr>
                 ) : null;
@@ -257,15 +274,13 @@ export default function PrintDocument({ doc, bank = {} }) {
               return [
                 gst.cgst > 0 && (
                   <tr key={`cgst-${rate}`}>
-                    <td colSpan={5} style={{ textAlign: 'right', fontStyle: 'italic' }}>CGST @ {rateNum / 2}%</td>
-                    <td style={{ textAlign: 'center', fontStyle: 'italic' }}>{rateNum / 2}%</td>
+                    <td colSpan={9} style={{ textAlign: 'right', fontStyle: 'italic' }}>CGST @ {rateNum / 2}%</td>
                     <td style={{ textAlign: 'right' }}>{fmt(gst.cgst)}</td>
                   </tr>
                 ),
                 gst.sgst > 0 && (
                   <tr key={`sgst-${rate}`}>
-                    <td colSpan={5} style={{ textAlign: 'right', fontStyle: 'italic' }}>SGST @ {rateNum / 2}%</td>
-                    <td style={{ textAlign: 'center', fontStyle: 'italic' }}>{rateNum / 2}%</td>
+                    <td colSpan={9} style={{ textAlign: 'right', fontStyle: 'italic' }}>SGST @ {rateNum / 2}%</td>
                     <td style={{ textAlign: 'right' }}>{fmt(gst.sgst)}</td>
                   </tr>
                 ),
@@ -274,13 +289,13 @@ export default function PrintDocument({ doc, bank = {} }) {
 
             {Math.abs(roundOff) > 0.001 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: 'right', fontStyle: 'italic' }}>Round Off</td>
+                <td colSpan={9} style={{ textAlign: 'right', fontStyle: 'italic' }}>Round Off</td>
                 <td style={{ textAlign: 'right' }}>{fmt(roundOff)}</td>
               </tr>
             )}
 
             <tr style={{ background: '#f5f5f5' }}>
-              <td colSpan={6} style={{ textAlign: 'right', fontWeight: 700, fontSize: 12 }}>Total</td>
+              <td colSpan={9} style={{ textAlign: 'right', fontWeight: 700, fontSize: 12 }}>Total</td>
               <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 12 }}>₹{fmt(rounded)}</td>
             </tr>
           </tbody>

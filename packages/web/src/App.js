@@ -10,8 +10,6 @@ import InvoiceForm from './components/InvoiceForm';
 import InvoiceList from './components/InvoiceList';
 import InvoicePrint from './components/InvoicePrint';
 import QuotationPrint from './components/QuotationPrint';
-import QuotationList from './components/QuotationList';
-import QuotationForm from './components/QuotationForm';
 import PLStatement from './components/PLStatement';
 import GSTTracker from './components/GSTTracker';
 import Settings from './components/Settings';
@@ -22,7 +20,6 @@ const NAV_ITEMS = [
   { path: '/customers', label: 'Customers', icon: '👥' },
   { path: '/vendors', label: 'Vendors', icon: '🏢', adminOnly: true },
   { path: '/products', label: 'Products', icon: '📦' },
-  { path: '/quotations', label: 'Quotations', icon: '📋' },
   { path: '/invoices', label: 'Invoices', icon: '🧾' },
   { path: '/pl', label: 'P&L', icon: '💰', adminOnly: true },
   { path: '/gst', label: 'GST Tracker', icon: '📋', adminOnly: true },
@@ -169,9 +166,6 @@ export default function App() {
                     <Route path="/customers" element={<CustomerList />} />
                     <Route path="/vendors" element={<VendorList />} />
                     <Route path="/products" element={<ProductList />} />
-                    <Route path="/quotations" element={<QuotationList />} />
-                    <Route path="/quotations/new" element={<QuotationForm />} />
-                    <Route path="/quotations/:id" element={<QuotationForm />} />
                     <Route path="/invoices" element={<InvoiceList />} />
                     <Route path="/invoices/new" element={<InvoiceForm />} />
                     <Route path="/invoices/:id" element={<InvoiceForm />} />

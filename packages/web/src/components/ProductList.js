@@ -231,7 +231,13 @@ export default function ProductList() {
     (!filterVendor || p.vendor_id === parseInt(filterVendor))
   );
 
-  const margin = (cost, sell) => cost > 0 ? (((sell - cost) / cost) * 100).toFixed(1) : '0.0';
+  // incl-GST gross margin: (sell_incl - cost_incl) / sell_incl
+  const inclGst = (price, rate) => Math.round(price * (1 + rate / 100) * 100) / 100;
+  const margin = (cost, sell, gstRate) => {
+    const c = inclGst(parseFloat(cost) || 0, parseFloat(gstRate) || 0);
+    const s = inclGst(parseFloat(sell) || 0, parseFloat(gstRate) || 0);
+    return s > 0 ? (((s - c) / s) * 100).toFixed(1) : '0.0';
+  };
 
   const f = (field, label, type = 'text', extra = {}) => (
     <div className="form-group">
@@ -326,8 +332,8 @@ export default function ProductList() {
             <thead>
               <tr>
                 <th>Name</th><th>SKU</th><th>HSN</th><th>Vendor</th><th>Category</th>
-                {role === 'admin' && <th>Cost</th>}
-                <th>Sell Price</th>
+                {role === 'admin' && <th>Cost (incl. GST)</th>}
+                <th>Sell Price (incl. GST)</th>
                 {role === 'admin' && <th>Margin</th>}
                 <th>GST</th><th>Stock</th><th>Physical</th>
                 {role === 'admin' && <th>Actions</th>}
@@ -341,10 +347,10 @@ export default function ProductList() {
                   <td><code>{p.hsn_code}</code></td>
                   <td>{p.vendor_name}</td>
                   <td>{p.category || '—'}</td>
-                  {role === 'admin' && <td>₹{parseFloat(p.cost_price).toFixed(2)}</td>}
-                  <td>₹{parseFloat(p.selling_price).toFixed(2)}</td>
+                  {role === 'admin' && <td>₹{parseFloat(p.cost_price_with_gst || inclGst(p.cost_price, p.gst_rate)).toFixed(2)}</td>}
+                  <td>₹{parseFloat(p.selling_price_with_gst || inclGst(p.selling_price, p.gst_rate)).toFixed(2)}</td>
                   {role === 'admin' && (
-                    <td><span style={{ color: margin(p.cost_price, p.selling_price) > 0 ? '#27ae60' : '#e74c3c' }}>{margin(p.cost_price, p.selling_price)}%</span></td>
+                    <td><span style={{ color: (p.margin ?? margin(p.cost_price, p.selling_price, p.gst_rate)) > 0 ? '#27ae60' : '#e74c3c' }}>{parseFloat(p.margin ?? margin(p.cost_price, p.selling_price, p.gst_rate)).toFixed(1)}%</span></td>
                   )}
                   <td>{p.gst_rate}%</td>
                   <td>{p.quantity_in_stock} {p.unit}</td>
@@ -406,11 +412,20 @@ export default function ProductList() {
                 {role === 'admin' && f('selling_price', 'Selling Price (₹)', 'number', { min: 0, step: '0.01' })}
               </div>
 
-              {role === 'admin' && form.cost_price && form.selling_price && (
-                <div className="alert alert-success" style={{ marginBottom: 12 }}>
-                  Margin: {margin(form.cost_price, form.selling_price)}% | Profit: ₹{(parseFloat(form.selling_price) - parseFloat(form.cost_price)).toFixed(2)}
-                </div>
-              )}
+              {role === 'admin' && form.cost_price && form.selling_price && (() => {
+                const gst = parseFloat(form.gst_rate) || 0;
+                const costI = inclGst(parseFloat(form.cost_price), gst);
+                const sellI = inclGst(parseFloat(form.selling_price), gst);
+                const mgn = margin(form.cost_price, form.selling_price, form.gst_rate);
+                return (
+                  <div className="alert alert-success" style={{ marginBottom: 12 }}>
+                    Cost incl. GST: ₹{costI.toFixed(2)} &nbsp;|&nbsp;
+                    Sell incl. GST: ₹{sellI.toFixed(2)} &nbsp;|&nbsp;
+                    Margin: {mgn}% &nbsp;|&nbsp;
+                    Profit: ₹{(sellI - costI).toFixed(2)}
+                  </div>
+                );
+              })()}
 
               <div className="form-group">
                 <label>Description</label>

@@ -32,11 +32,15 @@ export default function InvoiceForm() {
   const [form, setForm] = useState({
     invoice_number: '', invoice_date: new Date().toISOString().split('T')[0],
     invoice_type: 'intrastate', customer_name: '', customer_email: '',
-    customer_address: '', customer_gst: '', status: 'draft', notes: '',
+    customer_address: '', ship_to_address: '', customer_gst: '', status: 'draft', notes: '',
+    transaction_reference: '',
   });
   const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [customerSuggestions, setCustomerSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const customerSearchTimeout = React.useRef(null);
 
   useEffect(() => {
     apiFetch(`${API}/products`).then(r => r.json()).then(setProducts);
@@ -57,9 +61,11 @@ export default function InvoiceForm() {
       customer_name: inv.customerName || inv.customer_name,
       customer_email: inv.customerEmail || inv.customer_email || '',
       customer_address: inv.customerAddress || inv.customer_address || '',
+      ship_to_address: inv.shipToAddress || inv.ship_to_address || '',
       customer_gst: inv.customerGST || inv.customer_gst || '',
       status: inv.status,
       notes: inv.notes || '',
+      transaction_reference: inv.transactionReference || inv.transaction_reference || '',
     });
     setItems((inv.items || []).map(i => ({
       item_name: i.itemName || i.item_name || '',
@@ -105,6 +111,33 @@ export default function InvoiceForm() {
   function addItem() { setItems([...items, { ...EMPTY_ITEM }]); }
   function removeItem(idx) { if (items.length > 1) setItems(items.filter((_, i) => i !== idx)); }
 
+  function handleCustomerNameChange(value) {
+    setForm(f => ({ ...f, customer_name: value }));
+    clearTimeout(customerSearchTimeout.current);
+    if (!value.trim()) { setCustomerSuggestions([]); setShowSuggestions(false); return; }
+    customerSearchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await apiFetch(`${API}/customers?search=${encodeURIComponent(value)}`);
+        const data = await res.json();
+        setCustomerSuggestions(data);
+        setShowSuggestions(data.length > 0);
+      } catch { setCustomerSuggestions([]); }
+    }, 200);
+  }
+
+  function selectCustomer(customer) {
+    setForm(f => ({
+      ...f,
+      customer_name: customer.name,
+      customer_email: customer.email || '',
+      customer_address: customer.billToAddress || '',
+      ship_to_address: customer.shipToAddress || '',
+      customer_gst: customer.gstNumber || '',
+    }));
+    setCustomerSuggestions([]);
+    setShowSuggestions(false);
+  }
+
   const totals = items.reduce((acc, item) => ({
     beforeTax: acc.beforeTax + (item.amount || 0),
     igst: acc.igst + (item.igst || 0),
@@ -114,9 +147,25 @@ export default function InvoiceForm() {
     afterTax: acc.afterTax + (item.total_with_tax || 0),
   }), { beforeTax: 0, igst: 0, cgst: 0, sgst: 0, tax: 0, afterTax: 0 });
 
+  const isPaid = form.status === 'paid';
+  const canMarkPaid = form.notes.trim() && form.transaction_reference.trim();
+
+  function handleStatusChange(newStatus) {
+    if (newStatus === 'paid' && !canMarkPaid) {
+      setError('To mark as Paid, you must fill in both Notes and Transaction Reference.');
+      return;
+    }
+    setError('');
+    setForm(f => ({ ...f, status: newStatus }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    if (form.status === 'paid' && !canMarkPaid) {
+      setError('To mark as Paid, you must fill in both Notes and Transaction Reference.');
+      return;
+    }
     setLoading(true);
     try {
       const payload = {
@@ -147,9 +196,24 @@ export default function InvoiceForm() {
         <h1>{id ? 'Edit Invoice' : 'New Invoice'}</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           {id && (
-            <button type="button" className="btn btn-outline" onClick={() => window.open(`/print/invoice/${id}`, '_blank')}>
-              Print Invoice
-            </button>
+            <>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => window.open(`/print/invoice/${id}?mode=quotation`, '_blank')}
+              >
+                Download Quotation
+              </button>
+              <button
+                type="button"
+                className={`btn ${isPaid ? 'btn-primary' : 'btn-outline'}`}
+                disabled={!isPaid}
+                title={!isPaid ? 'Mark invoice as Paid to download Invoice' : ''}
+                onClick={() => window.open(`/print/invoice/${id}?mode=invoice`, '_blank')}
+              >
+                Download Invoice
+              </button>
+            </>
           )}
           <button className="btn btn-outline" onClick={() => navigate('/invoices')}>← Back</button>
         </div>
@@ -182,9 +246,44 @@ export default function InvoiceForm() {
         <div className="card" style={{ marginBottom: 16 }}>
           <h3 style={{ marginBottom: 16 }}>Customer Details</h3>
           <div className="grid-2">
-            <div className="form-group">
+            <div className="form-group" style={{ position: 'relative' }}>
               <label>Customer Name *</label>
-              <input className="form-control" required value={form.customer_name} onChange={e => setForm({ ...form, customer_name: e.target.value })} />
+              <input
+                className="form-control"
+                required
+                autoComplete="off"
+                value={form.customer_name}
+                onChange={e => handleCustomerNameChange(e.target.value)}
+                onFocus={() => { if (customerSuggestions.length > 0) setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                placeholder="Type to search customers..."
+              />
+              {showSuggestions && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100,
+                  background: '#fff', border: '1px solid #ddd', borderRadius: 4,
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.12)', maxHeight: 200, overflowY: 'auto',
+                }}>
+                  {customerSuggestions.map(c => (
+                    <div
+                      key={c.id}
+                      onMouseDown={() => selectCustomer(c)}
+                      style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#f5f7ff'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                    >
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</div>
+                      {(c.gstNumber || c.email) && (
+                        <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                          {c.gstNumber && <span>{c.gstNumber}</span>}
+                          {c.gstNumber && c.email && <span> · </span>}
+                          {c.email && <span>{c.email}</span>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="form-group">
               <label>Email</label>
@@ -194,19 +293,16 @@ export default function InvoiceForm() {
               <label>GST Number</label>
               <input className="form-control" value={form.customer_gst} onChange={e => setForm({ ...form, customer_gst: e.target.value.toUpperCase() })} placeholder="22AAAAA0000A1Z5" />
             </div>
-            <div className="form-group">
-              <label>Status</label>
-              <select className="form-control" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                <option value="draft">Draft</option>
-                <option value="sent">Sent</option>
-                <option value="paid">Paid</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
           </div>
-          <div className="form-group">
-            <label>Address</label>
-            <textarea className="form-control" rows={2} value={form.customer_address} onChange={e => setForm({ ...form, customer_address: e.target.value })} />
+          <div className="grid-2">
+            <div className="form-group">
+              <label>Bill To Address</label>
+              <textarea className="form-control" rows={3} value={form.customer_address} onChange={e => setForm({ ...form, customer_address: e.target.value })} placeholder="Billing address..." />
+            </div>
+            <div className="form-group">
+              <label>Ship To Address</label>
+              <textarea className="form-control" rows={3} value={form.ship_to_address} onChange={e => setForm({ ...form, ship_to_address: e.target.value })} placeholder="Shipping address (if different from billing)..." />
+            </div>
           </div>
         </div>
 
@@ -318,9 +414,69 @@ export default function InvoiceForm() {
         </div>
 
         <div className="card" style={{ marginBottom: 16 }}>
+          <h3 style={{ marginBottom: 4 }}>Payment & Status</h3>
+          <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>
+            Fill in Notes and Transaction Reference to unlock the <strong>Paid</strong> status and enable Invoice download.
+          </p>
+          <div className="grid-2" style={{ marginBottom: 12 }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>
+                Notes {form.status === 'paid' && <span style={{ color: '#dc3545' }}>*</span>}
+              </label>
+              <textarea
+                className="form-control"
+                rows={2}
+                value={form.notes}
+                onChange={e => setForm({ ...form, notes: e.target.value })}
+                placeholder="Payment notes, remarks..."
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label>
+                Transaction Reference {form.status === 'paid' && <span style={{ color: '#dc3545' }}>*</span>}
+              </label>
+              <input
+                className="form-control"
+                value={form.transaction_reference}
+                onChange={e => setForm({ ...form, transaction_reference: e.target.value })}
+                placeholder="UPI ref / cheque no. / transfer ID..."
+              />
+            </div>
+          </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label>Notes</label>
-            <textarea className="form-control" rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Additional notes..." />
+            <label>Status</label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {[
+                { value: 'draft', label: 'Draft', color: '#6c757d' },
+                { value: 'paid', label: 'Paid', color: '#198754' },
+                { value: 'cancelled', label: 'Cancelled', color: '#dc3545' },
+              ].map(opt => {
+                const isSelected = form.status === opt.value;
+                const isDisabled = opt.value === 'paid' && !canMarkPaid;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    title={isDisabled ? 'Fill Notes and Transaction Reference first' : ''}
+                    disabled={isDisabled}
+                    onClick={() => handleStatusChange(opt.value)}
+                    style={{
+                      padding: '6px 18px',
+                      borderRadius: 20,
+                      border: `2px solid ${opt.color}`,
+                      background: isSelected ? opt.color : 'transparent',
+                      color: isSelected ? '#fff' : opt.color,
+                      cursor: isDisabled ? 'not-allowed' : 'pointer',
+                      fontWeight: isSelected ? 700 : 400,
+                      fontSize: 13,
+                      opacity: isDisabled ? 0.5 : 1,
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 

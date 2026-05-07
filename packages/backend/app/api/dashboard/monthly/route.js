@@ -20,7 +20,7 @@ export async function GET() {
     const invoices = await prisma.invoice.findMany({
       where: {
         invoice_date: { gte: startDate, lte: endDate },
-        NOT: { status: 'cancelled' },
+        status: 'paid',
       },
       select: { invoice_date: true, total_amount_after_tax: true, total_tax: true },
     });

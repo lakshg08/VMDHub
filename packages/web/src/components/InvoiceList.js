@@ -96,8 +96,15 @@ export default function InvoiceList() {
                       <button
                         className="btn btn-outline btn-sm"
                         style={{ marginRight: 4 }}
-                        onClick={() => window.open(`/print/invoice/${inv.id}`, '_blank')}
-                      >Print</button>
+                        onClick={() => window.open(`/print/invoice/${inv.id}?mode=quotation`, '_blank')}
+                      >Quotation</button>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        style={{ marginRight: 4, opacity: inv.status === 'paid' ? 1 : 0.4, cursor: inv.status === 'paid' ? 'pointer' : 'not-allowed' }}
+                        title={inv.status !== 'paid' ? 'Invoice available only when status is Paid' : ''}
+                        disabled={inv.status !== 'paid'}
+                        onClick={() => window.open(`/print/invoice/${inv.id}?mode=invoice`, '_blank')}
+                      >Invoice</button>
                       <button
                         className="btn btn-outline btn-sm"
                         style={{ marginRight: 4 }}

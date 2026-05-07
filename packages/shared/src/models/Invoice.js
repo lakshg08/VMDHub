@@ -4,7 +4,7 @@ class InvoiceItem {
   constructor(data = {}) {
     this.id = data.id || null;
     this.invoiceId = data.invoice_id || data.invoiceId || null;
-    this.productId = data.product_id || data.productId || null;
+    this.productId = data.product_id || data.productId ? Number(data.product_id || data.productId) || null : null;
     this.itemName = data.item_name || data.itemName || '';
     this.quantity = parseFloat(data.quantity || 0);
     this.unitPrice = parseFloat(data.unit_price || data.unitPrice || 0);
@@ -77,9 +77,11 @@ class Invoice {
     this.customerName = data.customer_name || data.customerName || '';
     this.customerEmail = data.customer_email || data.customerEmail || '';
     this.customerAddress = data.customer_address || data.customerAddress || '';
+    this.shipToAddress = data.ship_to_address || data.shipToAddress || '';
     this.customerGST = data.customer_gst || data.customerGST || '';
     this.status = data.status || 'draft';
     this.notes = data.notes || '';
+    this.transactionReference = data.transaction_reference || data.transactionReference || '';
     this.bankUpiId = data.bank_upi_id || data.bankUpiId || '';
     this.bankName = data.bank_name || data.bankName || '';
     this.bankAccountNumber = data.bank_account_number || data.bankAccountNumber || '';
@@ -131,6 +133,7 @@ class Invoice {
       customer_name: this.customerName,
       customer_email: this.customerEmail,
       customer_address: this.customerAddress,
+      ship_to_address: this.shipToAddress,
       customer_gst: this.customerGST,
       total_amount_before_tax: this.totalAmountBeforeTax,
       total_igst: this.totalIGST,
@@ -140,6 +143,7 @@ class Invoice {
       total_amount_after_tax: this.totalAmountAfterTax,
       status: this.status,
       notes: this.notes,
+      transaction_reference: this.transactionReference,
       bank_upi_id: this.bankUpiId,
       bank_name: this.bankName,
       bank_account_number: this.bankAccountNumber,
@@ -157,9 +161,11 @@ class Invoice {
       customerName: this.customerName,
       customerEmail: this.customerEmail,
       customerAddress: this.customerAddress,
+      shipToAddress: this.shipToAddress,
       customerGST: this.customerGST,
       status: this.status,
       notes: this.notes,
+      transactionReference: this.transactionReference,
       bankUpiId: this.bankUpiId,
       bankName: this.bankName,
       bankAccountNumber: this.bankAccountNumber,

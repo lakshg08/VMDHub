@@ -7,6 +7,7 @@ const API = 'http://localhost:3001/api';
 
 export default function InvoicePrint() {
   const { id } = useParams();
+  const mode = new URLSearchParams(window.location.search).get('mode') || 'invoice';
   const [doc, setDoc] = useState(null);
   const [bank, setBank] = useState({});
   const [error, setError] = useState('');
@@ -18,7 +19,7 @@ export default function InvoicePrint() {
     ]).then(([inv, sett]) => {
       if (inv.error) throw new Error(inv.error);
       setDoc({
-        type: 'invoice',
+        type: mode === 'quotation' ? 'quotation' : 'invoice',
         number: inv.invoiceNumber,
         date: inv.invoiceDate,
         validUntil: null,
@@ -26,7 +27,10 @@ export default function InvoicePrint() {
         invoiceType: inv.invoiceType,
         customerName: inv.customerName,
         customerAddress: inv.customerAddress,
+        shipToAddress: inv.shipToAddress,
         customerGST: inv.customerGST,
+        notes: inv.notes,
+        transactionReference: inv.transactionReference,
         items: inv.items || [],
         totalAmountBeforeTax: inv.totalAmountBeforeTax,
         totalIGST: inv.totalIGST,
@@ -35,7 +39,6 @@ export default function InvoicePrint() {
         totalTax: inv.totalTax,
         totalAmountAfterTax: inv.totalAmountAfterTax,
       });
-      // snapshot first, fall back to current settings
       setBank({
         upiId: inv.bankUpiId || sett.upi_id || '',
         name: inv.bankName || sett.bank_name || '',
@@ -44,7 +47,7 @@ export default function InvoicePrint() {
         ifsc: inv.bankIfsc || sett.bank_ifsc || '',
       });
     }).catch(e => setError(e.message));
-  }, [id]);
+  }, [id, mode]);
 
   if (error) return <div style={{ padding: 40, color: 'red' }}>Error: {error}</div>;
   if (!doc) return <div style={{ padding: 40 }}>Loading…</div>;

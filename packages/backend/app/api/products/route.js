@@ -3,6 +3,14 @@ import { productQueries } from '@vmd/shared';
 import Product from '@vmd/shared/src/models/Product';
 import { generateSku } from '../../../lib/generateSku';
 
+function withComputedPricing(p) {
+  const r = n => Math.round(Number(n || 0) * 100) / 100;
+  const costIncl = r(p.cost_price * (1 + p.gst_rate / 100));
+  const sellIncl = r(p.selling_price * (1 + p.gst_rate / 100));
+  const margin = sellIncl > 0 ? r(((sellIncl - costIncl) / sellIncl) * 100) : 0;
+  return { ...p, cost_price_with_gst: costIncl, selling_price_with_gst: sellIncl, margin };
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,8 +20,8 @@ export async function GET(request) {
       : await productQueries.getAll();
     const role = request.headers.get('x-user-role');
     const data = role === 'staff'
-      ? products.map(({ cost_price, ...rest }) => rest)
-      : products;
+      ? products.map(p => { const { cost_price, cost_price_with_gst, margin, ...rest } = withComputedPricing(p); return rest; })
+      : products.map(withComputedPricing);
     return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
