@@ -256,6 +256,15 @@ export default function InvoiceForm() {
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/invoices')}>Cancel</button>
+          {id && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => window.open(`/print/invoice/${id}`, '_blank')}
+            >
+              Print Invoice
+            </button>
+          )}
           <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'Saving...' : (id ? 'Update Invoice' : 'Create Invoice')}
           </button>

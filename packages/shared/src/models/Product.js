@@ -52,7 +52,7 @@ class Product {
     return {
       name: this.name,
       sku: this.sku,
-      vendor_id: this.vendorId,
+      vendor_id: this.vendorId ? parseInt(this.vendorId, 10) : null,
       category: this.category,
       hsn_code: this.hsnCode,
       cost_price: this.costPrice,
