@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 
@@ -13,7 +14,7 @@ export default function PLStatement() {
   async function fetchPL() {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/pl?year=${year}`);
+      const res = await apiFetch(`${API}/pl?year=${year}`);
       setData(await res.json());
     } catch (err) {
       console.error(err);
@@ -23,7 +24,7 @@ export default function PLStatement() {
   }
 
   async function exportPDF() {
-    const res = await fetch(`${API}/pl/export?year=${year}&format=html`);
+    const res = await apiFetch(`${API}/pl/export?year=${year}&format=html`);
     const html = await res.text();
     const win = window.open('', '_blank');
     win.document.write(html);

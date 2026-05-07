@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 
@@ -19,7 +20,7 @@ export default function CustomerList() {
 
   async function fetchCustomers() {
     try {
-      const res = await fetch(`${API}/customers`);
+      const res = await apiFetch(`${API}/customers`);
       setCustomers(await res.json());
     } catch (err) {
       setError('Failed to load customers');
@@ -34,7 +35,7 @@ export default function CustomerList() {
     try {
       const url = editing ? `${API}/customers/${editing.id}` : `${API}/customers`;
       const method = editing ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -57,7 +58,7 @@ export default function CustomerList() {
   async function handleDelete(id) {
     if (!window.confirm('Delete this customer?')) return;
     try {
-      const res = await fetch(`${API}/customers/${id}`, { method: 'DELETE' });
+      const res = await apiFetch(`${API}/customers/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
       fetchCustomers();
     } catch (err) {

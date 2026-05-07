@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import { AuthContext } from './AuthContext';
+import LoginPage from './components/LoginPage';
 import Dashboard from './components/Dashboard';
 import CustomerList from './components/CustomerList';
 import VendorList from './components/VendorList';
@@ -8,19 +10,30 @@ import InvoiceForm from './components/InvoiceForm';
 import PLStatement from './components/PLStatement';
 import GSTTracker from './components/GSTTracker';
 import Settings from './components/Settings';
+import BackupModal from './components/BackupModal';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: '📊' },
   { path: '/customers', label: 'Customers', icon: '👥' },
-  { path: '/vendors', label: 'Vendors', icon: '🏢' },
+  { path: '/vendors', label: 'Vendors', icon: '🏢', adminOnly: true },
   { path: '/products', label: 'Products', icon: '📦' },
   { path: '/invoices', label: 'Invoices', icon: '🧾' },
-  { path: '/pl', label: 'P&L', icon: '💰' },
-  { path: '/gst', label: 'GST Tracker', icon: '📋' },
+  { path: '/pl', label: 'P&L', icon: '💰', adminOnly: true },
+  { path: '/gst', label: 'GST Tracker', icon: '📋', adminOnly: true },
   { path: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
-function Sidebar({ collapsed, onToggle }) {
+function parseToken(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp * 1000 < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function Sidebar({ collapsed, onToggle, onBackupClick, onLogout, navItems, username, role }) {
   return (
     <nav style={{
       width: collapsed ? 60 : 240,
@@ -39,7 +52,7 @@ function Sidebar({ collapsed, onToggle }) {
         </button>
       </div>
       <div style={{ flex: 1, paddingTop: 12 }}>
-        {NAV_ITEMS.map(item => (
+        {navItems.map(item => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -62,8 +75,38 @@ function Sidebar({ collapsed, onToggle }) {
           </NavLink>
         ))}
       </div>
+      <button onClick={onBackupClick} style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '10px 16px', background: 'none', border: 'none',
+        color: 'rgba(255,255,255,0.8)', cursor: 'pointer', width: '100%',
+        fontSize: 14, borderLeft: '3px solid transparent',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <span style={{ fontSize: 18 }}>☁</span>
+        {!collapsed && <span>Backup</span>}
+      </button>
       {!collapsed && (
-        <div style={{ padding: 16, fontSize: 11, color: 'rgba(255,255,255,0.4)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>
+            {username} <span style={{ background: 'rgba(255,255,255,0.15)', padding: '2px 6px', borderRadius: 10, fontSize: 10, marginLeft: 4 }}>{role}</span>
+          </div>
+          <button onClick={onLogout} style={{
+            background: 'none', border: '1px solid rgba(255,255,255,0.3)', color: 'rgba(255,255,255,0.7)',
+            padding: '4px 10px', borderRadius: 4, cursor: 'pointer', fontSize: 12, width: '100%',
+          }}>
+            Sign Out
+          </button>
+        </div>
+      )}
+      {collapsed && (
+        <button onClick={onLogout} style={{
+          background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)',
+          padding: '10px', cursor: 'pointer', fontSize: 16,
+          borderTop: '1px solid rgba(255,255,255,0.1)',
+        }} title="Sign Out">↩</button>
+      )}
+      {!collapsed && (
+        <div style={{ padding: '8px 16px', fontSize: 11, color: 'rgba(255,255,255,0.4)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           VMDHub v1.0.0
         </div>
       )}
@@ -73,27 +116,60 @@ function Sidebar({ collapsed, onToggle }) {
 
 export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showBackup, setShowBackup] = useState(false);
+  const [auth, setAuth] = useState(() => {
+    const token = localStorage.getItem('vmd_token');
+    if (!token) return null;
+    const payload = parseToken(token);
+    if (!payload) { localStorage.removeItem('vmd_token'); return null; }
+    return { token, role: payload.role, username: payload.username };
+  });
+
+  function handleLogin(data) {
+    localStorage.setItem('vmd_token', data.token);
+    setAuth({ token: data.token, role: data.role, username: data.username });
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('vmd_token');
+    setAuth(null);
+  }
+
+  if (!auth) return <LoginPage onLogin={handleLogin} />;
+
+  const visibleNavItems = NAV_ITEMS.filter(item => auth.role === 'admin' || !item.adminOnly);
 
   return (
-    <BrowserRouter>
-      <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(c => !c)} />
-        <main style={{ flex: 1, padding: 24, overflow: 'auto', background: '#f4f6f9' }}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/customers" element={<CustomerList />} />
-            <Route path="/vendors" element={<VendorList />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/invoices" element={<InvoiceForm />} />
-            <Route path="/invoices/new" element={<InvoiceForm />} />
-            <Route path="/invoices/:id" element={<InvoiceForm />} />
-            <Route path="/pl" element={<PLStatement />} />
-            <Route path="/gst" element={<GSTTracker />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+    <AuthContext.Provider value={auth}>
+      <BrowserRouter>
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
+          <Sidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(c => !c)}
+            onBackupClick={() => setShowBackup(true)}
+            onLogout={handleLogout}
+            navItems={visibleNavItems}
+            username={auth.username}
+            role={auth.role}
+          />
+          <main style={{ flex: 1, padding: 24, overflow: 'auto', background: '#f4f6f9' }}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/customers" element={<CustomerList />} />
+              <Route path="/vendors" element={<VendorList />} />
+              <Route path="/products" element={<ProductList />} />
+              <Route path="/invoices" element={<InvoiceForm />} />
+              <Route path="/invoices/new" element={<InvoiceForm />} />
+              <Route path="/invoices/:id" element={<InvoiceForm />} />
+              <Route path="/pl" element={<PLStatement />} />
+              <Route path="/gst" element={<GSTTracker />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
+        {showBackup && <BackupModal onClose={() => setShowBackup(false)} />}
+      </BrowserRouter>
+    </AuthContext.Provider>
   );
 }

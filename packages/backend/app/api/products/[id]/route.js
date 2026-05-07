@@ -6,7 +6,9 @@ export async function GET(request, { params }) {
   try {
     const product = await productQueries.getById(params.id);
     if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-    return NextResponse.json(product);
+    const role = request.headers.get('x-user-role');
+    const data = role === 'staff' ? (({ cost_price, ...rest }) => rest)(product) : product;
+    return NextResponse.json(data);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

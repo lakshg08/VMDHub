@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 
@@ -18,8 +19,8 @@ export default function GSTTracker() {
     setLoading(true);
     try {
       const [gstRes, invGSTRes] = await Promise.all([
-        fetch(`${API}/gst?year=${year}`),
-        fetch(`${API}/gst/invoice-summary?year=${year}`),
+        apiFetch(`${API}/gst?year=${year}`),
+        apiFetch(`${API}/gst/invoice-summary?year=${year}`),
       ]);
       setGstData(await gstRes.json());
       setInvoiceGST(await invGSTRes.json());
@@ -58,7 +59,7 @@ export default function GSTTracker() {
 
   async function handleSave(e) {
     e.preventDefault();
-    await fetch(`${API}/gst`, {
+    await apiFetch(`${API}/gst`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editForm),

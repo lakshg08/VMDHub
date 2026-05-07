@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 
@@ -18,7 +19,7 @@ export default function VendorList() {
 
   async function fetchVendors() {
     try {
-      const res = await fetch(`${API}/vendors`);
+      const res = await apiFetch(`${API}/vendors`);
       const data = await res.json();
       setVendors(data);
     } catch (err) {
@@ -34,7 +35,7 @@ export default function VendorList() {
     try {
       const url = editing ? `${API}/vendors/${editing.id}` : `${API}/vendors`;
       const method = editing ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -57,7 +58,7 @@ export default function VendorList() {
   async function handleDelete(id) {
     if (!window.confirm('Delete this vendor?')) return;
     try {
-      await fetch(`${API}/vendors/${id}`, { method: 'DELETE' });
+      await apiFetch(`${API}/vendors/${id}`, { method: 'DELETE' });
       fetchVendors();
     } catch (err) {
       setError('Failed to delete vendor');
