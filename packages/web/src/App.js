@@ -7,7 +7,6 @@ import CustomerList from './components/CustomerList';
 import VendorList from './components/VendorList';
 import ProductList from './components/ProductList';
 import InvoiceForm from './components/InvoiceForm';
-import InvoicePrint from './components/InvoicePrint';
 import PLStatement from './components/PLStatement';
 import GSTTracker from './components/GSTTracker';
 import Settings from './components/Settings';
@@ -143,40 +142,33 @@ export default function App() {
   return (
     <AuthContext.Provider value={auth}>
       <BrowserRouter>
-        <Routes>
-          <Route path="/print/invoice/:id" element={<InvoicePrint />} />
-          <Route path="*" element={
-            <>
-              <div style={{ display: 'flex', minHeight: '100vh' }}>
-                <Sidebar
-                  collapsed={sidebarCollapsed}
-                  onToggle={() => setSidebarCollapsed(c => !c)}
-                  onBackupClick={() => setShowBackup(true)}
-                  onLogout={handleLogout}
-                  navItems={visibleNavItems}
-                  username={auth.username}
-                  role={auth.role}
-                />
-                <main style={{ flex: 1, padding: 24, overflow: 'auto', background: '#f4f6f9' }}>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/customers" element={<CustomerList />} />
-                    <Route path="/vendors" element={<VendorList />} />
-                    <Route path="/products" element={<ProductList />} />
-                    <Route path="/invoices" element={<InvoiceForm />} />
-                    <Route path="/invoices/new" element={<InvoiceForm />} />
-                    <Route path="/invoices/:id" element={<InvoiceForm />} />
-                    <Route path="/pl" element={<PLStatement />} />
-                    <Route path="/gst" element={<GSTTracker />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </main>
-              </div>
-              {showBackup && <BackupModal onClose={() => setShowBackup(false)} />}
-            </>
-          } />
-        </Routes>
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
+          <Sidebar
+            collapsed={sidebarCollapsed}
+            onToggle={() => setSidebarCollapsed(c => !c)}
+            onBackupClick={() => setShowBackup(true)}
+            onLogout={handleLogout}
+            navItems={visibleNavItems}
+            username={auth.username}
+            role={auth.role}
+          />
+          <main style={{ flex: 1, padding: 24, overflow: 'auto', background: '#f4f6f9' }}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/customers" element={<CustomerList />} />
+              <Route path="/vendors" element={<VendorList />} />
+              <Route path="/products" element={<ProductList />} />
+              <Route path="/invoices" element={<InvoiceForm />} />
+              <Route path="/invoices/new" element={<InvoiceForm />} />
+              <Route path="/invoices/:id" element={<InvoiceForm />} />
+              <Route path="/pl" element={<PLStatement />} />
+              <Route path="/gst" element={<GSTTracker />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+        </div>
+        {showBackup && <BackupModal onClose={() => setShowBackup(false)} />}
       </BrowserRouter>
     </AuthContext.Provider>
   );
