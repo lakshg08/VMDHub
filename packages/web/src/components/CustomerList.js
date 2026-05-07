@@ -13,6 +13,7 @@ export default function CustomerList() {
   const [form, setForm] = useState(EMPTY_CUSTOMER);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [sameAddress, setSameAddress] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -68,22 +69,35 @@ export default function CustomerList() {
 
   function openEdit(c) {
     setEditing(c);
+    const ship = c.shipToAddress || '';
+    const bill = c.billToAddress || '';
     setForm({
       name: c.name,
       email: c.email || '',
       phone: c.phone || '',
-      ship_to_address: c.shipToAddress || '',
-      bill_to_address: c.billToAddress || '',
+      ship_to_address: ship,
+      bill_to_address: bill,
       gst_number: c.gstNumber || '',
     });
+    setSameAddress(bill.length > 0 && ship === bill);
     setShowModal(true);
   }
 
   function openCreate() {
     setEditing(null);
     setForm(EMPTY_CUSTOMER);
+    setSameAddress(false);
     setError('');
     setShowModal(true);
+  }
+
+  function handleBillAddressChange(val) {
+    setForm(f => ({ ...f, bill_to_address: val, ...(sameAddress ? { ship_to_address: val } : {}) }));
+  }
+
+  function handleSameAddressToggle(checked) {
+    setSameAddress(checked);
+    if (checked) setForm(f => ({ ...f, ship_to_address: f.bill_to_address }));
   }
 
   const filtered = customers.filter(c => {
@@ -256,19 +270,31 @@ export default function CustomerList() {
                   className="form-control"
                   rows={3}
                   value={form.bill_to_address}
-                  onChange={e => setForm({ ...form, bill_to_address: e.target.value })}
+                  onChange={e => handleBillAddressChange(e.target.value)}
                   placeholder="Billing address"
                 />
               </div>
 
               <div className="form-group">
-                <label>Ship To Address</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <label style={{ marginBottom: 0 }}>Ship To Address</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#555', cursor: 'pointer', fontWeight: 400, marginBottom: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={sameAddress}
+                      onChange={e => handleSameAddressToggle(e.target.checked)}
+                    />
+                    Same as Bill To Address
+                  </label>
+                </div>
                 <textarea
                   className="form-control"
                   rows={3}
                   value={form.ship_to_address}
                   onChange={e => setForm({ ...form, ship_to_address: e.target.value })}
                   placeholder="Shipping address (if different from billing)"
+                  disabled={sameAddress}
+                  style={sameAddress ? { background: '#f8f9fa', color: '#6c757d' } : {}}
                 />
               </div>
 

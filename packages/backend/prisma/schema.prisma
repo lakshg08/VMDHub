@@ -116,6 +116,55 @@ model InvoiceItem {
   @@map("invoice_items")
 }
 
+model Quotation {
+  id                      Int             @id @default(autoincrement())
+  quotation_number        String          @unique
+  quotation_date          String
+  valid_until             String?
+  invoice_type            String          @default("intrastate")
+  customer_id             Int?
+  customer_name           String
+  customer_email          String?
+  customer_phone          String?
+  customer_gst            String?
+  customer_address        String?
+  status                  String          @default("draft")
+  notes                   String?
+  total_amount_before_tax Float           @default(0)
+  total_igst              Float           @default(0)
+  total_cgst              Float           @default(0)
+  total_sgst              Float           @default(0)
+  total_tax               Float           @default(0)
+  total_amount_after_tax  Float           @default(0)
+  converted_invoice_id    Int?
+  created_at              DateTime        @default(now())
+  updated_at              DateTime        @updatedAt
+  items                   QuotationItem[]
+
+  @@map("quotations")
+}
+
+model QuotationItem {
+  id             Int       @id @default(autoincrement())
+  quotation_id   Int
+  product_id     Int?
+  item_name      String
+  hsn_code       String    @default("")
+  quantity       Float
+  unit_price     Float
+  cost_price     Float     @default(0)
+  amount         Float
+  gst_rate       Float     @default(0)
+  igst           Float     @default(0)
+  cgst           Float     @default(0)
+  sgst           Float     @default(0)
+  total_with_tax Float
+  created_at     DateTime  @default(now())
+  quotation      Quotation @relation(fields: [quotation_id], references: [id], onDelete: Cascade)
+
+  @@map("quotation_items")
+}
+
 model MonthlyGst {
   id          Int      @id @default(autoincrement())
   year_month  String   @unique
