@@ -3,12 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
-const GST_RATES = [0, 5, 12, 18, 28];
+const GST_RATES = [0, 3, 5, 12, 18, 28];
+const UNITS = ['PCS', 'KGS', 'MTR', 'LTR', 'BOX', 'SET'];
 
-const EMPTY_ITEM = { item_name: '', product_id: '', quantity: 1, unit_price: 0, gst_rate: 18, amount: 0, igst: 0, cgst: 0, sgst: 0, total_with_tax: 0 };
+const EMPTY_ITEM = {
+  item_name: '', product_id: '', quantity: 1, unit: 'PCS',
+  unit_price: 0, gst_rate: 18, hsn_code: '',
+  amount: 0, igst: 0, cgst: 0, sgst: 0, total_with_tax: 0,
+};
 
 function calcItem(item, type) {
-  const amount = (parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0);
+  const amount = Math.round((parseFloat(item.quantity) || 0) * (parseFloat(item.unit_price) || 0) * 100) / 100;
   const gstRate = parseFloat(item.gst_rate) || 0;
   let igst = 0, cgst = 0, sgst = 0;
   if (type === 'interstate') {
@@ -17,7 +22,7 @@ function calcItem(item, type) {
     cgst = Math.round(amount * (gstRate / 2) / 100 * 100) / 100;
     sgst = cgst;
   }
-  return { ...item, amount: Math.round(amount * 100) / 100, igst, cgst, sgst, total_with_tax: Math.round((amount + igst + cgst + sgst) * 100) / 100 };
+  return { ...item, amount, igst, cgst, sgst, total_with_tax: Math.round((amount + igst + cgst + sgst) * 100) / 100 };
 }
 
 export default function InvoiceForm() {
@@ -46,23 +51,49 @@ export default function InvoiceForm() {
     const res = await apiFetch(`${API}/invoices/${invoiceId}`);
     const inv = await res.json();
     setForm({
-      invoice_number: inv.invoice_number, invoice_date: inv.invoice_date,
-      invoice_type: inv.invoice_type, customer_name: inv.customer_name,
-      customer_email: inv.customer_email || '', customer_address: inv.customer_address || '',
-      customer_gst: inv.customer_gst || '', status: inv.status, notes: inv.notes || '',
+      invoice_number: inv.invoiceNumber || inv.invoice_number,
+      invoice_date: inv.invoiceDate || inv.invoice_date,
+      invoice_type: inv.invoiceType || inv.invoice_type,
+      customer_name: inv.customerName || inv.customer_name,
+      customer_email: inv.customerEmail || inv.customer_email || '',
+      customer_address: inv.customerAddress || inv.customer_address || '',
+      customer_gst: inv.customerGST || inv.customer_gst || '',
+      status: inv.status,
+      notes: inv.notes || '',
     });
-    setItems((inv.items || []).map(i => ({ ...i, item_name: i.item_name, unit_price: i.unit_price })));
+    setItems((inv.items || []).map(i => ({
+      item_name: i.itemName || i.item_name || '',
+      product_id: i.productId || i.product_id || '',
+      quantity: i.quantity,
+      unit: i.unit || 'PCS',
+      unit_price: i.unitPrice || i.unit_price,
+      gst_rate: i.gstRate || i.gst_rate,
+      hsn_code: i.hsnCode || i.hsn_code || '',
+      amount: i.amount,
+      igst: i.igst,
+      cgst: i.cgst,
+      sgst: i.sgst,
+      total_with_tax: i.totalWithTax || i.total_with_tax,
+    })));
   }
 
   function handleItemChange(idx, field, value) {
     const newItems = [...items];
-    newItems[idx] = calcItem({ ...newItems[idx], [field]: value }, form.invoice_type);
+    let updated = { ...newItems[idx], [field]: value };
     if (field === 'product_id' && value) {
       const product = products.find(p => p.id === parseInt(value));
       if (product) {
-        newItems[idx] = calcItem({ ...newItems[idx], item_name: product.name, unit_price: product.selling_price, gst_rate: product.gst_rate }, form.invoice_type);
+        updated = {
+          ...updated,
+          item_name: product.name,
+          unit_price: product.selling_price,
+          gst_rate: product.gst_rate,
+          hsn_code: product.hsn_code || '',
+          unit: product.unit || 'PCS',
+        };
       }
     }
+    newItems[idx] = calcItem(updated, form.invoice_type);
     setItems(newItems);
   }
 
@@ -114,7 +145,14 @@ export default function InvoiceForm() {
     <div>
       <div className="page-header">
         <h1>{id ? 'Edit Invoice' : 'New Invoice'}</h1>
-        <button className="btn btn-outline" onClick={() => navigate('/invoices')}>← Back</button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {id && (
+            <button type="button" className="btn btn-outline" onClick={() => window.open(`/print/invoice/${id}`, '_blank')}>
+              Print Invoice
+            </button>
+          )}
+          <button className="btn btn-outline" onClick={() => navigate('/invoices')}>← Back</button>
+        </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
@@ -182,14 +220,16 @@ export default function InvoiceForm() {
             <table>
               <thead>
                 <tr>
-                  <th style={{ minWidth: 180 }}>Item</th>
-                  <th style={{ width: 80 }}>Qty</th>
-                  <th style={{ width: 100 }}>Unit Price</th>
+                  <th style={{ minWidth: 160 }}>Product / Item</th>
+                  <th style={{ width: 90 }}>HSN/SAC</th>
+                  <th style={{ width: 70 }}>Qty</th>
+                  <th style={{ width: 80 }}>Unit</th>
+                  <th style={{ width: 100 }}>Rate (₹)</th>
                   <th style={{ width: 80 }}>GST%</th>
                   <th style={{ width: 100 }}>Amount</th>
                   <th style={{ width: 80 }}>Tax</th>
                   <th style={{ width: 110 }}>Total</th>
-                  <th style={{ width: 50 }}>Del</th>
+                  <th style={{ width: 40 }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -204,19 +244,49 @@ export default function InvoiceForm() {
                         list={`products-${idx}`}
                       />
                       <datalist id={`products-${idx}`}>
-                        {products.map(p => <option key={p.id} value={p.name} />)}
+                        {products.map(p => <option key={p.id} value={p.name} data-id={p.id} />)}
                       </datalist>
+                      <select
+                        className="form-control"
+                        style={{ marginTop: 4, fontSize: 12 }}
+                        value={item.product_id || ''}
+                        onChange={e => handleItemChange(idx, 'product_id', e.target.value)}
+                      >
+                        <option value="">— select product —</option>
+                        {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
+                      </select>
                     </td>
-                    <td><input className="form-control" type="number" min="0" step="0.01" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} /></td>
-                    <td><input className="form-control" type="number" min="0" step="0.01" value={item.unit_price} onChange={e => handleItemChange(idx, 'unit_price', e.target.value)} /></td>
                     <td>
-                      <select className="form-control" value={item.gst_rate} onChange={e => handleItemChange(idx, 'gst_rate', e.target.value)}>
+                      <input
+                        className="form-control"
+                        value={item.hsn_code || ''}
+                        onChange={e => handleItemChange(idx, 'hsn_code', e.target.value)}
+                        placeholder="HSN"
+                      />
+                    </td>
+                    <td>
+                      <input className="form-control" type="number" min="0" step="0.001" value={item.quantity}
+                        onChange={e => handleItemChange(idx, 'quantity', e.target.value)} />
+                    </td>
+                    <td>
+                      <select className="form-control" value={item.unit || 'PCS'}
+                        onChange={e => handleItemChange(idx, 'unit', e.target.value)}>
+                        {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <input className="form-control" type="number" min="0" step="0.01" value={item.unit_price}
+                        onChange={e => handleItemChange(idx, 'unit_price', e.target.value)} />
+                    </td>
+                    <td>
+                      <select className="form-control" value={item.gst_rate}
+                        onChange={e => handleItemChange(idx, 'gst_rate', e.target.value)}>
                         {GST_RATES.map(r => <option key={r} value={r}>{r}%</option>)}
                       </select>
                     </td>
-                    <td>₹{(item.amount || 0).toFixed(2)}</td>
-                    <td>₹{((item.igst || 0) + (item.cgst || 0) + (item.sgst || 0)).toFixed(2)}</td>
-                    <td><strong>₹{(item.total_with_tax || 0).toFixed(2)}</strong></td>
+                    <td style={{ textAlign: 'right' }}>₹{(item.amount || 0).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}>₹{((item.igst || 0) + (item.cgst || 0) + (item.sgst || 0)).toFixed(2)}</td>
+                    <td style={{ textAlign: 'right' }}><strong>₹{(item.total_with_tax || 0).toFixed(2)}</strong></td>
                     <td><button type="button" className="btn btn-danger btn-sm" onClick={() => removeItem(idx)}>✕</button></td>
                   </tr>
                 ))}
@@ -256,15 +326,6 @@ export default function InvoiceForm() {
 
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/invoices')}>Cancel</button>
-          {id && (
-            <button
-              type="button"
-              className="btn btn-outline"
-              onClick={() => window.open(`/print/invoice/${id}`, '_blank')}
-            >
-              Print Invoice
-            </button>
-          )}
           <button type="submit" className="btn btn-primary" disabled={loading}>
             {loading ? 'Saving...' : (id ? 'Update Invoice' : 'Create Invoice')}
           </button>

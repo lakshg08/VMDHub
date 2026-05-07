@@ -12,6 +12,7 @@ class InvoiceItem {
     this.amount = parseFloat(data.amount || 0);
     this.gstRate = parseFloat(data.gst_rate || data.gstRate || 0);
     this.hsnCode = data.hsn_code || data.hsnCode || '';
+    this.unit = data.unit || 'PCS';
     this.igst = parseFloat(data.igst || 0);
     this.cgst = parseFloat(data.cgst || 0);
     this.sgst = parseFloat(data.sgst || 0);
@@ -38,6 +39,7 @@ class InvoiceItem {
       amount: this.amount,
       gst_rate: this.gstRate,
       hsn_code: this.hsnCode,
+      unit: this.unit,
       igst: this.igst,
       cgst: this.cgst,
       sgst: this.sgst,
@@ -57,6 +59,7 @@ class InvoiceItem {
       amount: this.amount,
       gstRate: this.gstRate,
       hsnCode: this.hsnCode,
+      unit: this.unit,
       igst: this.igst,
       cgst: this.cgst,
       sgst: this.sgst,

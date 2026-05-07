@@ -105,6 +105,7 @@ model InvoiceItem {
   amount         Float
   gst_rate       Float    @default(0)
   hsn_code       String   @default("")
+  unit           String   @default("PCS")
   igst           Float    @default(0)
   cgst           Float    @default(0)
   sgst           Float    @default(0)
