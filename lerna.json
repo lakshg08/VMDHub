@@ -1,17 +1,9 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "version": "1.0.0",
-  "npmClient": "npm",
+  "npmClient": "pnpm",
   "useWorkspaces": true,
   "packages": [
     "packages/*"
-  ],
-  "command": {
-    "bootstrap": {
-      "hoist": true
-    },
-    "run": {
-      "stream": true
-    }
-  }
+  ]
 }

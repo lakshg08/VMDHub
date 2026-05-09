@@ -5,16 +5,16 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "concurrently \"npm run dev:react\" \"wait-on http://localhost:3000 && electron .\"",
+    "dev": "concurrently \"pnpm run dev:react\" \"wait-on http://localhost:3000 && electron .\"",
     "dev:react": "cross-env BROWSER=none react-scripts start",
-    "build": "npm run build:react && electron-builder",
+    "build": "pnpm run build:react && electron-builder",
     "build:react": "react-scripts build",
-    "build:win": "npm run build:react && electron-builder -w",
-    "build:mac": "npm run build:react && electron-builder -m",
+    "build:win": "pnpm run build:react && electron-builder -w",
+    "build:mac": "pnpm run build:react && electron-builder -m",
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@vmd/shared": "*",
+    "@vmd/shared": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.0",
