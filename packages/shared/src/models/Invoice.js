@@ -79,6 +79,8 @@ class Invoice {
     this.customerAddress = data.customer_address || data.customerAddress || '';
     this.shipToAddress = data.ship_to_address || data.shipToAddress || '';
     this.customerGST = data.customer_gst || data.customerGST || '';
+    this.customerTaxState = data.customer_tax_state || data.customerTaxState || '';
+    this.customerTaxStateCode = data.customer_tax_state_code || data.customerTaxStateCode || '';
     this.status = data.status || 'draft';
     this.notes = data.notes || '';
     this.transactionReference = data.transaction_reference || data.transactionReference || '';
@@ -135,6 +137,8 @@ class Invoice {
       customer_address: this.customerAddress,
       ship_to_address: this.shipToAddress,
       customer_gst: this.customerGST,
+      customer_tax_state: this.customerTaxState,
+      customer_tax_state_code: this.customerTaxStateCode,
       total_amount_before_tax: this.totalAmountBeforeTax,
       total_igst: this.totalIGST,
       total_cgst: this.totalCGST,
@@ -163,6 +167,8 @@ class Invoice {
       customerAddress: this.customerAddress,
       shipToAddress: this.shipToAddress,
       customerGST: this.customerGST,
+      customerTaxState: this.customerTaxState,
+      customerTaxStateCode: this.customerTaxStateCode,
       status: this.status,
       notes: this.notes,
       transactionReference: this.transactionReference,

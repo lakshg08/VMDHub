@@ -16,6 +16,8 @@ model Customer {
   ship_to_address  String?
   bill_to_address  String?
   gst_number       String?
+  tax_state        String?
+  tax_state_code   String?
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
@@ -80,6 +82,8 @@ model Invoice {
   customer_address        String?
   ship_to_address         String?
   customer_gst            String?
+  customer_tax_state      String?
+  customer_tax_state_code String?
   total_amount_before_tax Float         @default(0)
   total_igst              Float         @default(0)
   total_cgst              Float         @default(0)

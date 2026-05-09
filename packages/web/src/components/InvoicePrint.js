@@ -29,6 +29,8 @@ export default function InvoicePrint() {
         customerAddress: inv.customerAddress,
         shipToAddress: inv.shipToAddress,
         customerGST: inv.customerGST,
+        customerTaxState: inv.customerTaxState,
+        customerTaxStateCode: inv.customerTaxStateCode,
         notes: inv.notes,
         transactionReference: inv.transactionReference,
         items: inv.items || [],
@@ -48,6 +50,13 @@ export default function InvoicePrint() {
       });
     }).catch(e => setError(e.message));
   }, [id, mode]);
+
+  useEffect(() => {
+    if (!doc) return;
+    const label = doc.type === 'quotation' ? 'Performa Invoice' : 'Tax Invoice';
+    document.title = `${label} ${doc.number}`;
+    return () => { document.title = 'Invoice'; };
+  }, [doc]);
 
   if (error) return <div style={{ padding: 40, color: 'red' }}>Error: {error}</div>;
   if (!doc) return <div style={{ padding: 40 }}>Loading…</div>;

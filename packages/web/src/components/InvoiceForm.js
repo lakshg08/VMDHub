@@ -32,8 +32,9 @@ export default function InvoiceForm() {
   const [form, setForm] = useState({
     invoice_number: '', invoice_date: new Date().toISOString().split('T')[0],
     invoice_type: 'intrastate', customer_name: '', customer_email: '',
-    customer_address: '', ship_to_address: '', customer_gst: '', status: 'draft', notes: '',
-    transaction_reference: '',
+    customer_address: '', ship_to_address: '', customer_gst: '',
+    customer_tax_state: '', customer_tax_state_code: '',
+    status: 'draft', notes: '', transaction_reference: '',
   });
   const [items, setItems] = useState([{ ...EMPTY_ITEM }]);
   const [loading, setLoading] = useState(false);
@@ -63,6 +64,8 @@ export default function InvoiceForm() {
       customer_address: inv.customerAddress || inv.customer_address || '',
       ship_to_address: inv.shipToAddress || inv.ship_to_address || '',
       customer_gst: inv.customerGST || inv.customer_gst || '',
+      customer_tax_state: inv.customerTaxState || inv.customer_tax_state || '',
+      customer_tax_state_code: inv.customerTaxStateCode || inv.customer_tax_state_code || '',
       status: inv.status,
       notes: inv.notes || '',
       transaction_reference: inv.transactionReference || inv.transaction_reference || '',
@@ -133,6 +136,8 @@ export default function InvoiceForm() {
       customer_address: customer.billToAddress || '',
       ship_to_address: customer.shipToAddress || '',
       customer_gst: customer.gstNumber || '',
+      customer_tax_state: customer.taxState || '',
+      customer_tax_state_code: customer.taxStateCode || '',
     }));
     setCustomerSuggestions([]);
     setShowSuggestions(false);
@@ -293,6 +298,18 @@ export default function InvoiceForm() {
               <label>GST Number</label>
               <input className="form-control" value={form.customer_gst} onChange={e => setForm({ ...form, customer_gst: e.target.value.toUpperCase() })} placeholder="22AAAAA0000A1Z5" />
             </div>
+            <div className="form-group">
+              <label>Tax State</label>
+              <div className="form-control" style={{ background: '#f8f9fa', color: form.customer_tax_state ? '#212529' : '#999', minHeight: 38, lineHeight: '24px' }}>
+                {form.customer_tax_state || 'Auto-filled from customer'}
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Tax State Code</label>
+              <div className="form-control" style={{ background: '#f8f9fa', color: form.customer_tax_state_code ? '#212529' : '#999', minHeight: 38, lineHeight: '24px' }}>
+                {form.customer_tax_state_code || '—'}
+              </div>
+            </div>
           </div>
           <div className="grid-2">
             <div className="form-group">
@@ -316,12 +333,12 @@ export default function InvoiceForm() {
             <table>
               <thead>
                 <tr>
-                  <th style={{ minWidth: 160 }}>Product / Item</th>
-                  <th style={{ width: 90 }}>HSN/SAC</th>
-                  <th style={{ width: 70 }}>Qty</th>
-                  <th style={{ width: 80 }}>Unit</th>
-                  <th style={{ width: 100 }}>Rate (₹)</th>
-                  <th style={{ width: 80 }}>GST%</th>
+                  <th style={{ minWidth: 112 }}>Product / Item</th>
+                  <th style={{ width: 84 }}>HSN/SAC</th>
+                  <th style={{ width: 96 }}>Qty</th>
+                  <th style={{ width: 70 }}>Unit</th>
+                  <th style={{ width: 110 }}>Rate (₹)</th>
+                  <th style={{ width: 72 }}>GST%</th>
                   <th style={{ width: 100 }}>Amount</th>
                   <th style={{ width: 80 }}>Tax</th>
                   <th style={{ width: 110 }}>Total</th>
@@ -334,6 +351,7 @@ export default function InvoiceForm() {
                     <td>
                       <input
                         className="form-control"
+                        style={{ fontSize: 12, padding: '4px 6px' }}
                         value={item.item_name}
                         onChange={e => handleItemChange(idx, 'item_name', e.target.value)}
                         placeholder="Item name"
@@ -344,7 +362,7 @@ export default function InvoiceForm() {
                       </datalist>
                       <select
                         className="form-control"
-                        style={{ marginTop: 4, fontSize: 12 }}
+                        style={{ marginTop: 2, fontSize: 11, padding: '3px 4px' }}
                         value={item.product_id || ''}
                         onChange={e => handleItemChange(idx, 'product_id', e.target.value)}
                       >
@@ -355,6 +373,7 @@ export default function InvoiceForm() {
                     <td>
                       <input
                         className="form-control"
+                        style={{ fontSize: 12, padding: '4px 6px' }}
                         value={item.hsn_code || ''}
                         onChange={e => handleItemChange(idx, 'hsn_code', e.target.value)}
                         placeholder="HSN"
@@ -362,10 +381,11 @@ export default function InvoiceForm() {
                     </td>
                     <td>
                       <input className="form-control" type="number" min="0" step="0.001" value={item.quantity}
+                        style={{ textAlign: 'right' }}
                         onChange={e => handleItemChange(idx, 'quantity', e.target.value)} />
                     </td>
                     <td>
-                      <select className="form-control" value={item.unit || 'PCS'}
+                      <select className="form-control" style={{ fontSize: 12, padding: '4px 4px' }} value={item.unit || 'PCS'}
                         onChange={e => handleItemChange(idx, 'unit', e.target.value)}>
                         {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                       </select>

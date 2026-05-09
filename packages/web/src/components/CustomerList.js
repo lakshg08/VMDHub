@@ -3,7 +3,7 @@ import { apiFetch } from '../lib/api';
 
 const API = 'http://localhost:3001/api';
 
-const EMPTY_CUSTOMER = { name: '', email: '', phone: '', ship_to_address: '', bill_to_address: '', gst_number: '' };
+const EMPTY_CUSTOMER = { name: '', email: '', phone: '', ship_to_address: '', bill_to_address: '', gst_number: '', tax_state: '', tax_state_code: '' };
 
 export default function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -78,6 +78,8 @@ export default function CustomerList() {
       ship_to_address: ship,
       bill_to_address: bill,
       gst_number: c.gstNumber || '',
+      tax_state: c.taxState || '',
+      tax_state_code: c.taxStateCode || '',
     });
     setSameAddress(bill.length > 0 && ship === bill);
     setShowModal(true);
@@ -262,6 +264,28 @@ export default function CustomerList() {
                     <span style={{ marginLeft: 8, fontSize: 12, color: '#666' }}>No GST number — this is an individual customer</span>
                   </div>
                 )}
+              </div>
+
+              <div className="grid-2">
+                <div className="form-group">
+                  <label>Tax State</label>
+                  <input
+                    className="form-control"
+                    value={form.tax_state}
+                    onChange={e => setForm({ ...form, tax_state: e.target.value })}
+                    placeholder="e.g. Rajasthan"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Tax State Code</label>
+                  <input
+                    className="form-control"
+                    value={form.tax_state_code}
+                    onChange={e => setForm({ ...form, tax_state_code: e.target.value })}
+                    placeholder="e.g. 08"
+                    maxLength={3}
+                  />
+                </div>
               </div>
 
               <div className="form-group">

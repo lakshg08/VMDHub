@@ -105,7 +105,7 @@ export default function PrintDocument({ doc, bank = {} }) {
       <div className="invoice-page">
         {/* ── Title ── */}
         <div style={{ textAlign: 'center', fontWeight: 700, fontSize: 14, marginBottom: 8 }}>
-          {isQuotation ? 'Quotation' : 'Tax Invoice'}
+          {isQuotation ? 'Performa Invoice' : 'Tax Invoice'}
         </div>
 
         {/* ── Company + document meta ── */}
@@ -119,7 +119,7 @@ export default function PrintDocument({ doc, bank = {} }) {
                 <div>State Name : {COMPANY.state}</div>
               </td>
               <td style={{ width: '25%' }}>
-                <div style={{ fontSize: 9, color: '#555' }}>{isQuotation ? 'Quotation No.' : 'Invoice No.'}</div>
+                <div style={{ fontSize: 9, color: '#555' }}>{isQuotation ? 'Performa Invoice No.' : 'Invoice No.'}</div>
                 <div style={{ fontWeight: 700, fontSize: 12 }}>{doc.number}</div>
               </td>
               <td style={{ width: '25%' }}>
@@ -189,6 +189,7 @@ export default function PrintDocument({ doc, bank = {} }) {
                   </div>
                 )}
                 {doc.customerGST && <div style={{ marginTop: 2 }}>GSTIN/UIN : {doc.customerGST}</div>}
+                {doc.customerTaxState && <div style={{ marginTop: 2 }}>State Name : {doc.customerTaxState}{doc.customerTaxStateCode ? `, Code : ${doc.customerTaxStateCode}` : ''}</div>}
               </td>
               <td style={{ width: '25%', verticalAlign: 'top' }}><div style={{ fontSize: 9, color: '#555' }}>Buyer's Order No.</div></td>
               <td style={{ width: '25%', verticalAlign: 'top' }}><div style={{ fontSize: 9, color: '#555' }}>Dated</div></td>
@@ -199,6 +200,7 @@ export default function PrintDocument({ doc, bank = {} }) {
                 <div style={{ fontWeight: 700, marginTop: 2 }}>{doc.customerName}</div>
                 {doc.customerAddress && <div style={{ whiteSpace: 'pre-line', marginTop: 2 }}>{doc.customerAddress}</div>}
                 {doc.customerGST && <div style={{ marginTop: 2 }}>GSTIN/UIN : {doc.customerGST}</div>}
+                {doc.customerTaxState && <div style={{ marginTop: 2 }}>State Name : {doc.customerTaxState}{doc.customerTaxStateCode ? `, Code : ${doc.customerTaxStateCode}` : ''}</div>}
               </td>
               <td colSpan={2} style={{ verticalAlign: 'top' }}>
                 <div style={{ fontSize: 9, color: '#555' }}>Dispatch Doc No.</div>
@@ -407,7 +409,7 @@ export default function PrintDocument({ doc, bank = {} }) {
               <td style={{ width: '35%', verticalAlign: 'top', padding: 10 }}>
                 <div style={{ fontSize: 9, color: '#555', marginBottom: 4 }}>Declaration</div>
                 <div style={{ fontSize: 9 }}>
-                  We declare that this {isQuotation ? 'quotation' : 'invoice'} shows the actual price of
+                  We declare that this {isQuotation ? 'performa invoice' : 'invoice'} shows the actual price of
                   the goods described and that all particulars are true and correct.
                 </div>
                 {(bank.name || bank.accountNumber || bank.ifsc) && (
@@ -429,7 +431,7 @@ export default function PrintDocument({ doc, bank = {} }) {
         </table>
 
         <div style={{ textAlign: 'center', fontSize: 9, color: '#555', marginTop: 8, borderTop: '1px solid #ddd', paddingTop: 6 }}>
-          This is a Computer Generated {isQuotation ? 'Quotation' : 'Invoice'}
+          This is a Computer Generated {isQuotation ? 'Performa Invoice' : 'Invoice'}
         </div>
       </div>
     </>

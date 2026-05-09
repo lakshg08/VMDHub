@@ -119,6 +119,17 @@ export default function InvoiceList() {
                 );
               })}
             </tbody>
+            <tfoot>
+              <tr style={{ borderTop: '2px solid #dee2e6', background: '#f8f9fa' }}>
+                <td colSpan={4} style={{ fontWeight: 600, padding: '10px 12px' }}>
+                  Total ({invoices.length} invoice{invoices.length !== 1 ? 's' : ''})
+                </td>
+                <td style={{ textAlign: 'right', fontWeight: 700, fontSize: 15, padding: '10px 12px' }}>
+                  ₹{invoices.reduce((sum, inv) => sum + parseFloat(inv.totalAmountAfterTax || inv.total_amount_after_tax || 0), 0).toFixed(2)}
+                </td>
+                <td colSpan={2} />
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
