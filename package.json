@@ -3,27 +3,40 @@
   "version": "1.0.0",
   "description": "VMDHub - Cross-platform vendor management and invoice system",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
-    "setup": "npm install && npm run bootstrap",
-    "bootstrap": "lerna bootstrap",
-    "build:all": "lerna run build",
-    "build:web": "lerna run build --scope=@vmd/web",
-    "build:desktop": "lerna run build --scope=@vmd/desktop",
-    "build:mobile": "lerna run build --scope=@vmd/mobile",
-    "build:shared": "lerna run build --scope=@vmd/shared",
-    "build:backend": "lerna run build --scope=@vmd/backend",
-    "dev:web": "lerna run dev --scope=@vmd/web",
-    "dev:desktop": "lerna run dev --scope=@vmd/desktop",
-    "dev:mobile": "lerna run dev --scope=@vmd/mobile",
-    "dev:backend": "lerna run dev --scope=@vmd/backend",
-    "test": "lerna run test",
-    "lint": "lerna run lint",
-    "clean": "lerna clean --yes && rm -rf node_modules"
+    "setup": "pnpm install",
+    "build": "turbo build",
+    "build:web": "turbo build --filter=@vmd/web",
+    "build:desktop": "turbo build --filter=@vmd/desktop",
+    "build:mobile": "turbo build --filter=@vmd/mobile",
+    "build:shared": "turbo build --filter=@vmd/shared",
+    "build:backend": "turbo build --filter=@vmd/backend",
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=@vmd/web",
+    "dev:desktop": "turbo dev --filter=@vmd/desktop",
+    "dev:mobile": "turbo dev --filter=@vmd/mobile",
+    "dev:backend": "turbo dev --filter=@vmd/backend",
+    "start:backend": "turbo start --filter=@vmd/backend",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "clean": "turbo clean; rm -rf node_modules"
   },
   "devDependencies": {
-    "lerna": "^7.0.0"
+    "turbo": "^2.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "18.2.0",
+      "react-dom": "18.2.0"
+    },
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "core-js",
+      "core-js-pure",
+      "electron",
+      "prisma"
+    ]
   }
 }

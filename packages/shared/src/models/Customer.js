@@ -7,6 +7,8 @@ class Customer {
     this.shipToAddress = data.ship_to_address || data.shipToAddress || '';
     this.billToAddress = data.bill_to_address || data.billToAddress || '';
     this.gstNumber = data.gst_number || data.gstNumber || '';
+    this.taxState = data.tax_state || data.taxState || '';
+    this.taxStateCode = data.tax_state_code || data.taxStateCode || '';
     this.createdAt = data.created_at || data.createdAt || new Date().toISOString();
     this.updatedAt = data.updated_at || data.updatedAt || new Date().toISOString();
   }
@@ -24,6 +26,8 @@ class Customer {
       ship_to_address: this.shipToAddress || null,
       bill_to_address: this.billToAddress || null,
       gst_number: this.gstNumber || null,
+      tax_state: this.taxState || null,
+      tax_state_code: this.taxStateCode || null,
     };
   }
 
@@ -36,6 +40,8 @@ class Customer {
       shipToAddress: this.shipToAddress,
       billToAddress: this.billToAddress,
       gstNumber: this.gstNumber,
+      taxState: this.taxState,
+      taxStateCode: this.taxStateCode,
       customerType: this.customerType,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,

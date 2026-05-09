@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.14.0",
-    "@vmd/shared": "*",
+    "@vmd/shared": "workspace:*",
     "bcryptjs": "^2.4.3",
     "jose": "^5.10.0",
     "next": "^14.2.0",
